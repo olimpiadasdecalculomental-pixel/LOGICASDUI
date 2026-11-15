@@ -49,6 +49,21 @@ class DespachadorAccionesSdui {
     await onSincronizar();
   }
 
+  static Future generarYMostrarLibroPdfMaestro({
+    required BuildContext context,
+    required String tituloPdf,
+    required List itemsExtra,
+    required Function(String) onFeedback,
+  }) async {
+    await generarYMostrarLibroPdfMultiApp(
+      context: context,
+      tituloPdf: tituloPdf,
+      appsRegistradas: const [],
+      rolesRegistrados: const [],
+      onFeedback: onFeedback,
+    );
+  }
+
   static Future generarYMostrarLibroPdfMultiApp({
     required BuildContext context,
     required String tituloPdf,
