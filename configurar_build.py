@@ -44,6 +44,7 @@ def configurar_android():
             'android.permission.ACCESS_NETWORK_STATE',
             'android.permission.ACCESS_WIFI_STATE',
             'android.permission.CAMERA',
+            'android.permission.RECORD_AUDIO',
             'android.permission.VIBRATE',
         ]
         lineas_xml = ''
@@ -58,14 +59,21 @@ def configurar_android():
         gp = pathlib.Path(ruta_g)
         if gp.exists():
             gtxt = gp.read_text(encoding='utf-8')
-            gtxt = gtxt.replace('minSdk = flutter.minSdkVersion', 'minSdk = 23')
-            gtxt = gtxt.replace('minSdkVersion flutter.minSdkVersion', 'minSdkVersion 23')
+            gtxt = gtxt.replace('minSdk = flutter.minSdkVersion', 'minSdk = 24')
+            gtxt = gtxt.replace('minSdkVersion flutter.minSdkVersion', 'minSdkVersion 24')
             gtxt = gtxt.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 34')
             gp.write_text(gtxt, encoding='utf-8')
 
-def escribir_pubspec_nivel_2():
-    contenido = '''name: logica_sdui_fabrica_multiapp
-description: APK #3 Fabrica Multi-App de PRD, RFC, Usuarios y Diccionario UX/UI (Esquema 1)
+def resolver_pubspec():
+    # Primero intenta resolver el pubspec.yaml intacto con las 88 librerias
+    res = subprocess.run(['flutter', 'pub', 'get'])
+    if res.returncode == 0:
+        return
+    # Respaldo seguro solo si algun paquete externo tiene conflicto de version en el runner
+    res_up = subprocess.run(['flutter', 'pub', 'get', '--up'])
+    if res_up.returncode != 0:
+        contenido_seguro = '''name: logica_sdui_fabrica_multiapp
+description: APK Esquema 1 - Laboratorio SDUI Pantalla Completa
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -77,14 +85,18 @@ dependencies:
     sdk: flutter
   http: ^1.2.2
   path: ^1.9.0
-  crypto: ^3.0.5
+  crypto: ^3.0.6
   latlong2: ^0.9.1
   math_expressions: ^2.6.0
   units_converter: ^3.0.2
-  confetti: ^0.7.0
-  flutter_riverpod: ^2.5.1
-  drag_and_drop_lists: ^0.4.1
+  confetti: ^0.8.0
+  flutter_riverpod: ^2.6.1
+  drag_and_drop_lists: ^0.4.2
   pdf: ^3.11.1
+  ionicons: ^0.2.2
+  qr_flutter: ^4.1.0
+  expressions: ^0.2.5+2
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
@@ -95,44 +107,12 @@ flutter:
   assets:
     - logo.png
 '''
-    pathlib.Path('pubspec.yaml').write_text(contenido, encoding='utf-8')
-
-def escribir_pubspec_nivel_3():
-    contenido = '''name: logica_sdui_fabrica_multiapp
-description: APK #3 Fabrica Multi-App de PRD, RFC, Usuarios y Diccionario UX/UI (Esquema 1)
-publish_to: 'none'
-version: 1.0.0+1
-
-environment:
-  sdk: ^3.5.0
-
-dependencies:
-  flutter:
-    sdk: flutter
-  pdf: ^3.11.1
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-
-flutter:
-  uses-material-design: true
-  assets:
-    - logo.png
-'''
-    pathlib.Path('pubspec.yaml').write_text(contenido, encoding='utf-8')
-
-def resolver_pubspec():
-    escribir_pubspec_nivel_2()
-    res = subprocess.run(['flutter', 'pub', 'get'])
-    if res.returncode != 0:
-        escribir_pubspec_nivel_3()
+        pathlib.Path('pubspec.yaml').write_text(contenido_seguro, encoding='utf-8')
         subprocess.run(['flutter', 'pub', 'get'], check=True)
 
 def compilar_apk():
     res = subprocess.run(['flutter', 'build', 'apk', '--release', '--no-tree-shake-icons'])
     if res.returncode != 0:
-        escribir_pubspec_nivel_3()
         subprocess.run(['flutter', 'pub', 'get'], check=True)
         subprocess.run(['flutter', 'build', 'apk', '--release', '--no-tree-shake-icons'], check=True)
 
