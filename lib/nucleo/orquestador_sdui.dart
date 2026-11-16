@@ -8,6 +8,8 @@ import '../microservicios/ms_11_stitch_diseno_1_muro.dart';
 import '../microservicios/ms_15_teoria_3_links.dart';
 import '../microservicios/ms_16_fabrica_multi_app_usuarios.dart';
 import '../microservicios/ms_17_diccionario_uxui_interactivo.dart';
+import '../microservicios/ms_18_app_imperio_clon.dart';
+import '../microservicios/ms_19_motores_imperio.dart';
 
 class LienzoMaestroSdui extends StatefulWidget {
   const LienzoMaestroSdui({super.key});
@@ -16,21 +18,25 @@ class LienzoMaestroSdui extends StatefulWidget {
 }
 
 class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
-  static const int _totalPantallasReales = 8;
-  static const int _paginaInicialInfinita = 800; // 800 % 8 == 0 (Inicia en Pantalla 1)
+  static const int _totalPantallasReales = 10;
+  static const int _paginaInicialInfinita = 1000;
   late final PageController _pageCtrl;
   int _indiceActual = 0;
   String _feedback = '';
+  String _motorImperioSeleccionado = 'CINETV';
+  Map<String, dynamic> _argsMotorImperio = {};
 
-  static const List _titulos8Pantallas = [
-    '📚 1/8 · Teoría 3 Links (PRD + MD + RFC)',
-    '🏭 2/8 · Creador Multi-App y Usuarios',
-    '🔘 3/8 · Diccionario de Botones',
-    '🔤 4/8 · Textos, Labels y Links',
-    '💬 5/8 · Mensajes Sí / No y Modales',
-    '🗂️ 6/8 · Listas, GridView y Top-10 (10,000M)',
-    '📐 7/8 · RadioButton y Márgenes',
-    '🎨 8/8 · Simulador Stitch 1:1 y PDF',
+  static const List _titulos10Pantallas = [
+    '1/10 · Teoria 3 Links (PRD + MD + RFC)',
+    '2/10 · Creador Multi-App y Usuarios',
+    '3/10 · Diccionario de Botones',
+    '4/10 · Textos, Labels y Links',
+    '5/10 · Mensajes Si / No y Modales',
+    '6/10 · Listas, GridView y Top-10 (10,000M)',
+    '7/10 · RadioButton y Margenes',
+    '8/10 · Simulador Stitch 1:1 y PDF',
+    '9/10 · APPIMPERIO Clon (Pines + Mesas)',
+    '10/10 · Motores Imperio (Cine/AR/VR/M3)',
   ];
 
   @override
@@ -60,13 +66,23 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
 
   void _irAPantalla(int idxDestino) {
     HapticFeedback.selectionClick();
-    final int paginaActual = _pageCtrl.hasClients ? (_pageCtrl.page?.round() ?? _paginaInicialInfinita) : _paginaInicialInfinita;
+    final int paginaActual = _pageCtrl.hasClients
+        ? (_pageCtrl.page?.round() ?? _paginaInicialInfinita)
+        : _paginaInicialInfinita;
     final int base = paginaActual - (paginaActual % _totalPantallasReales);
     _pageCtrl.animateToPage(
       base + idxDestino,
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
     );
+  }
+
+  void _abrirMotorImperioDesdeClon(String motor, Map<String, dynamic> args) {
+    setState(() {
+      _motorImperioSeleccionado = motor;
+      _argsMotorImperio = args;
+    });
+    _irAPantalla(9);
   }
 
   Widget _construirPantallaPorIndice(int idxReal) {
@@ -101,7 +117,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
             modoPantalla: 'P7_RADIOS_MARGENES',
             onFeedback: _mostrarFeedback,
           );
-        default:
+        case 7:
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -118,7 +134,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
                   children: [
                     const Expanded(
                       child: Text(
-                        '🎨 PANTALLA 8/8 · VISTA STITCH 1:1 + LIBRO PDF MAESTRO',
+                        'PANTALLA 8/10 · VISTA STITCH 1:1 + LIBRO PDF MAESTRO',
                         style: TextStyle(color: Color(0xFFFBB400), fontSize: 12, fontWeight: FontWeight.w900),
                       ),
                     ),
@@ -150,7 +166,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
                     bloque: {
                       'id': 'logica_preview_stitch',
                       'tipo': 'STITCH_DISENO_1_EXACTO',
-                      'header_titulo': 'SAN JOSÉ',
+                      'header_titulo': 'SAN JOSE',
                       'header_anio': '1942',
                       'header_rango': 'ESQUEMA 1 ACTIVO',
                       'header_puntos': '350',
@@ -159,6 +175,18 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
                 ),
               ),
             ],
+          );
+        case 8:
+          return Ms18AppImperioClon(
+            onFeedback: _mostrarFeedback,
+            onAbrirMotorAvanzado: _abrirMotorImperioDesdeClon,
+          );
+        default:
+          return Ms19MotoresImperio(
+            motorInicial: _motorImperioSeleccionado,
+            argsIniciales: _argsMotorImperio,
+            onFeedback: _mostrarFeedback,
+            onCerrar: () => _irAPantalla(8),
           );
       }
     });
@@ -197,7 +225,6 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
               },
             ),
           ),
-
           Positioned(
             top: topPad + 4,
             left: 8,
@@ -228,7 +255,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
-                                act ? _titulos8Pantallas[i].toString() : '${i + 1}',
+                                act ? _titulos10Pantallas[i].toString() : '${i + 1}',
                                 style: TextStyle(
                                   color: act ? const Color(0xFF071326) : Colors.white70,
                                   fontSize: 9.5,
@@ -258,7 +285,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: const Text(
-                        '📄 PDF',
+                        'PDF',
                         style: TextStyle(color: Color(0xFF071326), fontSize: 9.5, fontWeight: FontWeight.w900),
                       ),
                     ),
@@ -267,7 +294,6 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
               ),
             ),
           ),
-
           if (_feedback.isNotEmpty)
             Positioned(
               bottom: botPad + 20,
