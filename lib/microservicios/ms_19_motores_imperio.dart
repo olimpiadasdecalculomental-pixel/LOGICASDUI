@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class Ms19MotoresImperio extends StatefulWidget {
   final String motorInicial;
-  final Map<String, dynamic> argsIniciales;
+  final Map argsIniciales;
   final Function(String) onFeedback;
   final VoidCallback onCerrar;
 
@@ -15,10 +15,10 @@ class Ms19MotoresImperio extends StatefulWidget {
   });
 
   @override
-  State<Ms19MotoresImperio> createState() => _Ms19MotoresImperioState();
+  State createState() => _Ms19MotoresImperioState();
 }
 
-class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
+class _Ms19MotoresImperioState extends State {
   static const Color cCyan = Color(0xFF00F3FF);
   static const Color cMagenta = Color(0xFFFF00FC);
   static const Color cGreen = Color(0xFF00FF66);
@@ -53,17 +53,17 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
   final TextEditingController _ctrlParental = TextEditingController(text: '40');
 
   String _subRolM3 = 'PROFESOR';
-  final List> _aulasM3 = [
+  final List _aulasM3 = [
     {'id': 'aula_1', 'nombre_materia': 'Matematicas Avanzadas', 'nivel_grado': '5to Secundaria', 'codigo_acceso': 'MAT-X7B9'},
     {'id': 'aula_2', 'nombre_materia': 'Ciencias y Robotica', 'nivel_grado': '6to Primaria', 'codigo_acceso': 'CIE-K4P2'},
   ];
-  final List> _examenesM3 = [
+  final List _examenesM3 = [
     {'id': 'exam_1', 'titulo': 'Olimpiada Logico-Matematica', 'tiempo_limite_minutos': 15, 'preguntas': 10},
   ];
   final int _puntosBovedaMto = 9999999;
-  final List<String> _miPlaylist = ['dig-mock-1'];
+  final List _miPlaylist = ['dig-mock-1'];
 
-  final List> _catalogoObras = [
+  final List _catalogoObras = [
     {
       'id': 'dig-mock-1',
       'titulo': 'Pista Epica (Aura Fuego)',
@@ -96,8 +96,8 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
   @override
   void initState() {
     super.initState();
-    _motorActivo = widget.motorInicial;
-    if (widget.argsIniciales['cat'] != null) {
+    _motorActivo = (widget as Ms19MotoresImperio).motorInicial;
+    if ((widget as Ms19MotoresImperio).argsIniciales['cat'] != null) {
       _busquedaMercado = '';
     }
   }
@@ -147,7 +147,7 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: cRed, foregroundColor: Colors.white),
-                  onPressed: widget.onCerrar,
+                  onPressed: (widget as Ms19MotoresImperio).onCerrar,
                   child: const Text('VOLVER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
               ],
@@ -273,7 +273,7 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
                 style: ElevatedButton.styleFrom(backgroundColor: sel ? cCyan : Colors.black),
                 onPressed: () {
                   setState(() => _epCine = idx);
-                  widget.onFeedback('Reproduciendo Ep. ${idx + 1} en ORBE CINE');
+                  (widget as Ms19MotoresImperio).onFeedback('Reproduciendo Ep. ${idx + 1} en ORBE CINE');
                 },
                 child: Text('Ep. ${idx + 1}', style: TextStyle(color: sel ? Colors.black : Colors.white, fontSize: 11)),
               );
@@ -285,10 +285,11 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
   }
 
   Widget _buildMotorMercadoIntelectual() {
-    final List> lista = _viendoMiLista
-        ? _catalogoObras.where((o) => _miPlaylist.contains(o['id'])).toList()
-        : _catalogoObras.where((o) {
+    final List lista = _viendoMiLista
+        ? _catalogoObras.where((raw) => _miPlaylist.contains((raw as Map)['id'])).toList()
+        : _catalogoObras.where((raw) {
             if (_busquedaMercado.trim().isEmpty) return true;
+            final Map o = Map.from(raw as Map);
             final q = _busquedaMercado.toLowerCase();
             return o['titulo'].toString().toLowerCase().contains(q) ||
                 o['autor'].toString().toLowerCase().contains(q);
@@ -346,7 +347,8 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
             ],
           ),
           const SizedBox(height: 12),
-          ...lista.map((obra) {
+          ...lista.map((raw) {
+            final Map obra = Map.from(raw as Map);
             final String idObra = obra['id'].toString();
             final bool enLista = _miPlaylist.contains(idObra);
             return Container(
@@ -368,14 +370,14 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
                           setState(() {
                             if (!enLista) _miPlaylist.add(idObra);
                           });
-                          widget.onFeedback('Agregado a Mi Lista (1 MTO)');
+                          (widget as Ms19MotoresImperio).onFeedback('Agregado a Mi Lista (1 MTO)');
                         },
                         child: Text(enLista ? 'En Coleccion' : 'Mi Lista 1(MTO)', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                       ),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: cGold, foregroundColor: Colors.black),
                         onPressed: () => _confirmarCompraDerechos(obra['titulo'].toString()),
-                        child: const Text('DERECHOS (5000 MTO)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        child: const Text('DERECHOS (5000 MTO)', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -404,7 +406,7 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
             style: ElevatedButton.styleFrom(backgroundColor: cGold, foregroundColor: Colors.black),
             onPressed: () {
               Navigator.pop(ctx);
-              widget.onFeedback('Derechos adquiridos de "$tituloObra" (80% inversor / 15% creador / 5% reserva).');
+              (widget as Ms19MotoresImperio).onFeedback('Derechos adquiridos de "$tituloObra" (80% inversor / 15% creador / 5% reserva).');
             },
             child: const Text('COMPRAR'),
           ),
@@ -429,7 +431,7 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
           const SizedBox(height: 10),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: cMagenta, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(44)),
-            onPressed: () => widget.onFeedback('Lote de ${_ctrlCantPremio.text} premios "$_catPremio" creado en inventario.'),
+            onPressed: () => (widget as Ms19MotoresImperio).onFeedback('Lote de ${_ctrlCantPremio.text} premios "$_catPremio" creado en inventario.'),
             child: const Text('CREAR LOTE DE PREMIOS', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
@@ -450,7 +452,7 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
             style: ElevatedButton.styleFrom(backgroundColor: cGreen, foregroundColor: Colors.black),
             onPressed: () {
               setState(() => _reservaMto = 0);
-              widget.onFeedback('Reserva transferida a cuenta personal del SuperAdmin.');
+              (widget as Ms19MotoresImperio).onFeedback('Reserva transferida a cuenta personal del SuperAdmin.');
             },
             child: const Text('RETIRAR A MI CUENTA', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
@@ -467,7 +469,7 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
           const SizedBox(height: 10),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.black, minimumSize: const Size.fromHeight(44)),
-            onPressed: () => widget.onFeedback('Reglas economicas y de mantenimiento guardadas.'),
+            onPressed: () => (widget as Ms19MotoresImperio).onFeedback('Reglas economicas y de mantenimiento guardadas.'),
             child: const Text('GUARDAR REGLAS', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
@@ -500,19 +502,25 @@ class _Ms19MotoresImperioState extends State<Ms19MotoresImperio> {
           const SizedBox(height: 12),
           if (_subRolM3 == 'PROFESOR') ...[
             const Text('Aulas Virtuales Activas:', style: TextStyle(color: cGreen, fontWeight: FontWeight.bold)),
-            ..._aulasM3.map((a) => ListTile(
-                  dense: true,
-                  title: Text('${a['nombre_materia']} (${a['nivel_grado']})', style: const TextStyle(color: Colors.white, fontSize: 12)),
-                  subtitle: Text('Codigo: ${a['codigo_acceso']}', style: const TextStyle(color: cCyan, fontSize: 11)),
-                )),
+            ..._aulasM3.map((raw) {
+              final Map a = Map.from(raw as Map);
+              return ListTile(
+                dense: true,
+                title: Text('${a['nombre_materia']} (${a['nivel_grado']})', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                subtitle: Text('Codigo: ${a['codigo_acceso']}', style: const TextStyle(color: cCyan, fontSize: 11)),
+              );
+            }),
           ],
           if (_subRolM3 == 'ALUMNO') ...[
             const Text('Misiones / Examenes Pendientes:', style: TextStyle(color: cRed, fontWeight: FontWeight.bold)),
-            ..._examenesM3.map((ex) => ListTile(
-                  dense: true,
-                  title: Text(ex['titulo'].toString(), style: const TextStyle(color: Colors.white, fontSize: 12)),
-                  subtitle: Text('Tiempo: ${ex['tiempo_limite_minutos']} min | ${ex['preguntas']} preguntas', style: const TextStyle(color: Colors.orange, fontSize: 11)),
-                )),
+            ..._examenesM3.map((raw) {
+              final Map ex = Map.from(raw as Map);
+              return ListTile(
+                dense: true,
+                title: Text(ex['titulo'].toString(), style: const TextStyle(color: Colors.white, fontSize: 12)),
+                subtitle: Text('Tiempo: ${ex['tiempo_limite_minutos']} min | ${ex['preguntas']} preguntas', style: const TextStyle(color: Colors.orange, fontSize: 11)),
+              );
+            }),
           ],
           if (_subRolM3 == 'PADRE') ...[
             const Text('Panel de Padres: Escuadron, Boveda de Notas y Puntos Orbe-Edu', style: TextStyle(color: cGold, fontSize: 12)),

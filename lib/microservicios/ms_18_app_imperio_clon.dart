@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 
 class Ms18AppImperioClon extends StatefulWidget {
   final Function(String) onFeedback;
-  final Function(String, Map<String, dynamic>) onAbrirMotorAvanzado;
+  final Function(String, Map) onAbrirMotorAvanzado;
 
   const Ms18AppImperioClon({
     super.key,
@@ -15,10 +15,10 @@ class Ms18AppImperioClon extends StatefulWidget {
   });
 
   @override
-  State<Ms18AppImperioClon> createState() => _Ms18AppImperioClonState();
+  State createState() => _Ms18AppImperioClonState();
 }
 
-class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
+class _Ms18AppImperioClonState extends State {
   static const String _supabaseUrl = 'https://cvueferyoyzayjlyjsmk.supabase.co';
   static const String _supabaseKey = 'sb_publishable_0XXkthm3dwy3osX2A4PUEg_UHVDl-lZ';
 
@@ -30,11 +30,18 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
   static const Color cRed = Color(0xFFFF0033);
   static const Color cGold = Color(0xFFFFD700);
 
-  Map<String, dynamic>? _user;
+  Map? _user;
   String _screen = 'login';
   bool _loading = false;
 
-  List> _solicitudes = [
+  final List _botonesPin = const [
+    {'pin': '9999', 'label': 'SUPERADMIN (9999)', 'color': cRed},
+    {'pin': '1111', 'label': 'ADMIN (1111)', 'color': cMagenta},
+    {'pin': '2222', 'label': 'RECARGADOR (2222)', 'color': cGold},
+    {'pin': '3333', 'label': 'USUARIO (3333)', 'color': cGreen},
+  ];
+
+  final List _solicitudes = [
     {
       'id': 'sol-101',
       'empresa': 'ENTEL',
@@ -55,22 +62,22 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
     },
   ];
 
-  List> _inventarioResumen = [
+  final List _inventarioResumen = [
     {'tipo': 'TARJETA', 'detalle': 'ENTEL - 10 Bs', 'cantidad': 25},
     {'tipo': 'CODIGO', 'detalle': 'CODIGO MTO - USD 5', 'cantidad': 40},
     {'tipo': 'TARJETA', 'detalle': 'TIGO - 30 Bs', 'cantidad': 15},
   ];
 
-  Map<String, int> _estadisticas = {
+  Map _estadisticas = {
     'aprobadas': 1204,
     'recargadas': 850,
     'fallidas': 12,
   };
 
-  final Map<String, Map<String, String>> _edicionesTemp = {};
+  final Map _edicionesTemp = {};
   bool _modalFotoVisible = false;
   String? _fotoSeleccionada;
-  Map<String, dynamic>? _usuarioDestino;
+  Map? _usuarioDestino;
   final TextEditingController _ctrlBusquedaId = TextEditingController();
   String _busquedaId = '';
 
@@ -80,7 +87,7 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
   final TextEditingController _ctrlCantTarjetas = TextEditingController();
   final TextEditingController _ctrlCantCodigos = TextEditingController();
 
-  static const Map<String, Map<String, dynamic>> _perfilesPin = {
+  static const Map _perfilesPin = {
     '9999': {
       'id': 'usr-0001',
       'nombre': 'JEFE SUPREMO',
@@ -121,15 +128,13 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
     super.dispose();
   }
 
-  Future<void> _handleLogin(String testPin) async {
+  Future _handleLogin(String testPin) async {
     HapticFeedback.mediumImpact();
     setState(() => _loading = true);
     try {
       final client = HttpClient();
       client.connectionTimeout = const Duration(seconds: 4);
-      final uri = Uri.parse(
-        '$_supabaseUrl/rest/v1/perfiles?pin_id=eq.$testPin&select=*',
-      );
+      final uri = Uri.parse('$_supabaseUrl/rest/v1/perfiles?pin_id=eq.$testPin&select=*');
       final req = await client.getUrl(uri);
       req.headers.set('apikey', _supabaseKey);
       req.headers.set('Authorization', 'Bearer $_supabaseKey');
@@ -140,26 +145,27 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
       if (res.statusCode >= 200 && res.statusCode < 300 && body.isNotEmpty) {
         final decoded = jsonDecode(body);
         if (decoded is List && decoded.isNotEmpty) {
-          final Map<String, dynamic> remoto = Map<String, dynamic>.from(decoded.first as Map);
+          final Map remoto = Map.from(decoded.first as Map);
           setState(() {
             _user = remoto;
             _screen = 'home';
             _loading = false;
           });
-          widget.onFeedback('Acceso concedido via Supabase: ${remoto['nombre']} (${remoto['rango']})');
+          (widget as Ms18AppImperioClon).onFeedback('Acceso concedido via Supabase: ${remoto['nombre']} (${remoto['rango']})');
           return;
         }
       }
     } catch (_) {}
 
-    final Map<String, dynamic>? perfilLocal = _perfilesPin[testPin];
-    if (perfilLocal != null) {
+    final dynamic rawPerfil = _perfilesPin[testPin];
+    if (rawPerfil is Map) {
+      final Map perfilLocal = Map.from(rawPerfil);
       setState(() {
-        _user = Map<String, dynamic>.from(perfilLocal);
+        _user = perfilLocal;
         _screen = 'home';
         _loading = false;
       });
-      widget.onFeedback('Sesion iniciada: ${perfilLocal['nombre']} | PIN $testPin');
+      (widget as Ms18AppImperioClon).onFeedback('Sesion iniciada: ${perfilLocal['nombre']} | PIN $testPin');
     } else {
       setState(() => _loading = false);
       _mostrarAlerta('AVISO', 'PIN $testPin no encontrado.');
@@ -188,7 +194,7 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
     );
   }
 
-  Future<void> _imprimirCodigos() async {
+  Future _imprimirCodigos() async {
     final cantTxt = _ctrlCantidadImpresion.text.trim();
     if (cantTxt.isEmpty) {
       _mostrarAlerta('AVISO', 'Ingresa la cantidad.');
@@ -201,7 +207,7 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
     }
     HapticFeedback.heavyImpact();
     setState(() => _loading = true);
-    await Future<void>.delayed(const Duration(milliseconds: 350));
+    await Future.delayed(const Duration(milliseconds: 350));
     setState(() {
       _loading = false;
       _inventarioResumen.insert(0, {
@@ -211,7 +217,7 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
       });
       _estadisticas = {
         ..._estadisticas,
-        'recargadas': (_estadisticas['recargadas'] ?? 0) + cant,
+        'recargadas': ((_estadisticas['recargadas'] as int?) ?? 0) + cant,
       };
       _ctrlCantidadImpresion.clear();
     });
@@ -220,18 +226,18 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
 
   void _manejarEdicion(String id, String campo, String valor) {
     setState(() {
-      final actual = Map<String, String>.from(_edicionesTemp[id] ?? {});
+      final actual = Map.from((_edicionesTemp[id] as Map?) ?? {});
       actual[campo] = valor;
       _edicionesTemp[id] = actual;
     });
   }
 
-  void _aprobarConEdicionFull(Map<String, dynamic> s) {
+  void _aprobarConEdicionFull(Map s) {
     final String id = s['id'].toString();
-    final Map<String, String> edit = _edicionesTemp[id] ?? {};
-    final String empFinal = edit['empresa'] ?? s['empresa'].toString();
-    final String montoFinal = edit['monto'] ?? s['monto_bs'].toString();
-    final String codFinal = edit['codigo'] ?? s['codigo_tarjeta'].toString();
+    final Map edit = Map.from((_edicionesTemp[id] as Map?) ?? {});
+    final String empFinal = (edit['empresa'] ?? s['empresa']).toString();
+    final String montoFinal = (edit['monto'] ?? s['monto_bs']).toString();
+    final String codFinal = (edit['codigo'] ?? s['codigo_tarjeta']).toString();
 
     showDialog(
       context: context,
@@ -256,10 +262,10 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
             onPressed: () {
               Navigator.pop(ctx);
               setState(() {
-                _solicitudes.removeWhere((item) => item['id'].toString() == id);
+                _solicitudes.removeWhere((item) => (item as Map)['id'].toString() == id);
                 _estadisticas = {
                   ..._estadisticas,
-                  'aprobadas': (_estadisticas['aprobadas'] ?? 0) + 1,
+                  'aprobadas': ((_estadisticas['aprobadas'] as int?) ?? 0) + 1,
                 };
               });
               _mostrarAlerta('EXITO', 'Saldo enviado.');
@@ -285,19 +291,21 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
     );
   }
 
-  Future<void> _buscarUsuario() async {
+  Future _buscarUsuario() async {
     if (_busquedaId.trim().isEmpty) return;
     setState(() => _loading = true);
-    await Future<void>.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 300));
     final String pinBuscado = _busquedaId.trim();
-    final Map<String, dynamic>? encontrado = _perfilesPin[pinBuscado] ??
-        {
-          'id': 'usr-$pinBuscado',
-          'nombre': 'SOCIO IMPERIO ($pinBuscado)',
-          'rango': 'USUARIO_FINAL',
-          'pin_id': pinBuscado,
-          'saldo_ic': 0,
-        };
+    final dynamic raw = _perfilesPin[pinBuscado];
+    final Map encontrado = raw is Map
+        ? Map.from(raw)
+        : {
+            'id': 'usr-$pinBuscado',
+            'nombre': 'SOCIO IMPERIO ($pinBuscado)',
+            'rango': 'USUARIO_FINAL',
+            'pin_id': pinBuscado,
+            'saldo_ic': 0,
+          };
     setState(() {
       _loading = false;
       _usuarioDestino = encontrado;
@@ -370,13 +378,6 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
   }
 
   Widget _buildLoginScreen() {
-    const List> botonesPin = [
-      {'pin': '9999', 'label': 'SUPERADMIN (9999)', 'color': cRed},
-      {'pin': '1111', 'label': 'ADMIN (1111)', 'color': cMagenta},
-      {'pin': '2222', 'label': 'RECARGADOR (2222)', 'color': cGold},
-      {'pin': '3333', 'label': 'USUARIO (3333)', 'color': cGreen},
-    ];
-
     return Container(
       color: cDark,
       padding: const EdgeInsets.all(30),
@@ -402,7 +403,8 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
             alignment: WrapAlignment.center,
             spacing: 10,
             runSpacing: 10,
-            children: botonesPin.map((b) {
+            children: _botonesPin.map((raw) {
+              final Map b = Map.from(raw as Map);
               final Color col = b['color'] as Color;
               return SizedBox(
                 width: 155,
@@ -490,7 +492,6 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
                   ],
                 ),
               ),
-
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: const BoxDecoration(
@@ -503,9 +504,9 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _tabItem(Icons.movie_outlined, 'MEDIA', cCyan, () => widget.onAbrirMotorAvanzado('CINETV', {})),
-                          _tabItem(Icons.sports_esports_outlined, 'ARCADE', cMagenta, () => widget.onAbrirMotorAvanzado('MERCADO', {'cat': 'CURSOS'})),
-                          _tabItem(Icons.school_outlined, 'CEREBRO', cCyan, () => widget.onAbrirMotorAvanzado('MUNDO3_PROFESOR', {})),
+                          _tabItem(Icons.movie_outlined, 'MEDIA', cCyan, () => (widget as Ms18AppImperioClon).onAbrirMotorAvanzado('CINETV', {})),
+                          _tabItem(Icons.sports_esports_outlined, 'ARCADE', cMagenta, () => (widget as Ms18AppImperioClon).onAbrirMotorAvanzado('MERCADO', {'cat': 'CURSOS'})),
+                          _tabItem(Icons.school_outlined, 'CEREBRO', cCyan, () => (widget as Ms18AppImperioClon).onAbrirMotorAvanzado('MUNDO3_PROFESOR', {})),
                           _tabItem(Icons.chat_bubble_outline, 'CHAT', cGreen, () => _mostrarAlerta('CHAT', 'Canal P2P activo.')),
                         ],
                       ),
@@ -515,9 +516,9 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _tabItem(Icons.qr_code_2_outlined, 'BOVEDA', cCyan, () => widget.onAbrirMotorAvanzado('BOVEDA_QR', {})),
-                          _tabItem(Icons.people_outline, 'DEALERS', cMagenta, () => widget.onAbrirMotorAvanzado('PREMIOS', {})),
-                          _tabItem(Icons.settings_outlined, 'ADMIN', cGreen, () => widget.onAbrirMotorAvanzado('REGLAS', {})),
+                          _tabItem(Icons.qr_code_2_outlined, 'BOVEDA', cCyan, () => (widget as Ms18AppImperioClon).onAbrirMotorAvanzado('BOVEDA_QR', {})),
+                          _tabItem(Icons.people_outline, 'DEALERS', cMagenta, () => (widget as Ms18AppImperioClon).onAbrirMotorAvanzado('PREMIOS', {})),
+                          _tabItem(Icons.settings_outlined, 'ADMIN', cGreen, () => (widget as Ms18AppImperioClon).onAbrirMotorAvanzado('REGLAS', {})),
                           _tabItem(Icons.power_settings_new, 'SALIR', cRed, () {
                             setState(() {
                               _screen = 'login';
@@ -530,7 +531,6 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
                   ],
                 ),
               ),
-
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.fromLTRB(15, 15, 15, MediaQuery.of(context).viewInsets.bottom + 60),
@@ -545,7 +545,6 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
               ),
             ],
           ),
-
           if (_modalFotoVisible)
             Positioned.fill(
               child: Container(
@@ -719,9 +718,10 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
               if (_solicitudes.isEmpty)
                 const Text('Sin pendientes.', style: TextStyle(color: Color(0xFF555555)))
               else
-                ..._solicitudes.map((s) {
+                ..._solicitudes.map((raw) {
+                  final Map s = Map.from(raw as Map);
                   final String id = s['id'].toString();
-                  final Map<String, String> edit = _edicionesTemp[id] ?? {};
+                  final Map edit = Map.from((_edicionesTemp[id] as Map?) ?? {});
                   return Container(
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFF222222)))),
@@ -733,7 +733,7 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
                             Expanded(
                               flex: 3,
                               child: TextFormField(
-                                initialValue: edit['empresa'] ?? s['empresa'].toString(),
+                                initialValue: (edit['empresa'] ?? s['empresa']).toString(),
                                 style: const TextStyle(color: Colors.white, fontSize: 12),
                                 onChanged: (v) => _manejarEdicion(id, 'empresa', v),
                               ),
@@ -742,7 +742,7 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
                             Expanded(
                               flex: 3,
                               child: TextFormField(
-                                initialValue: edit['monto'] ?? s['monto_bs'].toString(),
+                                initialValue: (edit['monto'] ?? s['monto_bs']).toString(),
                                 keyboardType: TextInputType.number,
                                 style: const TextStyle(color: Colors.white, fontSize: 12),
                                 onChanged: (v) => _manejarEdicion(id, 'monto', v),
@@ -772,7 +772,7 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
                           children: [
                             Expanded(
                               child: TextFormField(
-                                initialValue: edit['codigo'] ?? s['codigo_tarjeta'].toString(),
+                                initialValue: (edit['codigo'] ?? s['codigo_tarjeta']).toString(),
                                 style: const TextStyle(color: Colors.white, fontSize: 12),
                                 onChanged: (v) => _manejarEdicion(id, 'codigo', v),
                               ),
@@ -867,7 +867,8 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
           if (_inventarioResumen.isEmpty)
             const Text('Inventario vacio.', style: TextStyle(color: Color(0xFF555555)))
           else
-            ..._inventarioResumen.map((item) {
+            ..._inventarioResumen.map((raw) {
+              final Map item = Map.from(raw as Map);
               final bool esTarjeta = item['tipo'] == 'TARJETA';
               return Container(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -986,17 +987,17 @@ class _Ms18AppImperioClonState extends State<Ms18AppImperioClon> {
             children: [
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: cCyan, foregroundColor: Colors.black),
-                onPressed: () => widget.onAbrirMotorAvanzado('CINETV', {}),
+                onPressed: () => (widget as Ms18AppImperioClon).onAbrirMotorAvanzado('CINETV', {}),
                 child: const Text('CINE 4D / TV', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: cMagenta, foregroundColor: Colors.white),
-                onPressed: () => widget.onAbrirMotorAvanzado('MERCADO', {'cat': 'CURSOS'}),
+                onPressed: () => (widget as Ms18AppImperioClon).onAbrirMotorAvanzado('MERCADO', {'cat': 'CURSOS'}),
                 child: const Text('MERCADO / CURSOS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: cGreen, foregroundColor: Colors.black),
-                onPressed: () => widget.onAbrirMotorAvanzado('MUNDO3_ALUMNO', {}),
+                onPressed: () => (widget as Ms18AppImperioClon).onAbrirMotorAvanzado('MUNDO3_ALUMNO', {}),
                 child: const Text('MUNDO 3 ALUMNO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
               ),
             ],
