@@ -123,7 +123,7 @@ class PintorMatrizQrOptico extends CustomPainter {
     final paint = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.fill;
-    final int hashBase = semilla.codeUnits.fold(0, (a, b) => (a as int) * 31 + (b as int));
+    final int hashBase = semilla.codeUnits.fold<int>(0, (a, b) => a * 31 + b);
 
     void dibujarEsquina(int fila0, int col0) {
       for (int r = 0; r < 7; r++) {
