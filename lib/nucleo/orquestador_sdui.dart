@@ -24,7 +24,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
   int _indiceActual = 0;
   String _feedback = '';
   String _motorImperioSeleccionado = 'CINETV';
-  Map<String, dynamic> _argsMotorImperio = {};
+  Map _argsMotorImperio = {};
 
   static const List _titulos10Pantallas = [
     '1/10 · Teoria 3 Links (PRD + MD + RFC)',
@@ -77,7 +77,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
     );
   }
 
-  void _abrirMotorImperioDesdeClon(String motor, Map<String, dynamic> args) {
+  void _abrirMotorImperioDesdeClon(String motor, Map args) {
     setState(() {
       _motorImperioSeleccionado = motor;
       _argsMotorImperio = args;
