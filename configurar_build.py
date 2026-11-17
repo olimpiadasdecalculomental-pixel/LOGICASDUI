@@ -34,7 +34,6 @@ dependencies:
   uuid: ^4.5.1
   fl_chart: ^0.69.0
   table_calendar: ^3.1.2
-  flutter_math_fork: ^0.7.3
   screenshot: ^3.0.0
 
 dependency_overrides:

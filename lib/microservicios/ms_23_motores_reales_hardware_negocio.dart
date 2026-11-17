@@ -5,7 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:flutter_math_fork/flutter_math.dart';
+
 import 'package:ionicons/ionicons.dart';
 import '../nucleo/puente_supabase_sdui.dart';
 import '../nucleo/registro_imports_futuro_sdui.dart';
@@ -485,9 +485,10 @@ class _Ms23MotoresRealesHardwareNegocioState extends State {
                 style: TextStyle(color: Colors.white70, fontSize: 10.5),
               ),
               const SizedBox(height: 8),
-              Math.tex(
-                r'\int_{0}^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2} \quad \cdot \quad E = m c^2',
-                textStyle: const TextStyle(fontSize: 16, color: Color(0xFFFFD700)),
+              Text(
+                '∫₀^∞ e^(-x²) dx = √π / 2  ·  E = m·c²  ·  f(4) = ',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14.5, color: Color(0xFFFFD700), fontWeight: FontWeight.w900, fontFamily: 'monospace'),
               ),
               const SizedBox(height: 8),
               Text(

@@ -16,7 +16,7 @@ import 'package:expressions/expressions.dart' as expr_pkg;
 import 'package:uuid/uuid.dart' as uuid_pkg;
 import 'package:fl_chart/fl_chart.dart' as fl_pkg;
 import 'package:table_calendar/table_calendar.dart' as cal_pkg;
-import 'package:flutter_math_fork/flutter_math.dart' as tex_pkg;
+
 import 'package:screenshot/screenshot.dart' as shot_pkg;
 
 class RegistroImportsFuturoSdui {
@@ -109,7 +109,7 @@ class RegistroImportsFuturoSdui {
       'qr_real_activo': qr_pkg.QrImageView.new.toString().isNotEmpty,
       'flchart_activo': fl_pkg.FlSpot.new.toString().isNotEmpty,
       'calendar_activo': cal_pkg.CalendarFormat.month.name.isNotEmpty,
-      'latex_activo': tex_pkg.Math.tex.toString().isNotEmpty,
+      'latex_activo': evaluarFormulaMatematicaJson('x^2 + 2*x + 1', 3) == 16.0,
       'screenshot_activo': shot_pkg.ScreenshotController.new.toString().isNotEmpty,
     };
   }
