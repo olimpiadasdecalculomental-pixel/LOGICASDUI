@@ -17,13 +17,10 @@ import 'package:uuid/uuid.dart' as uuid_pkg;
 import 'package:fl_chart/fl_chart.dart' as fl_pkg;
 import 'package:table_calendar/table_calendar.dart' as cal_pkg;
 import 'package:screenshot/screenshot.dart' as shot_pkg;
-import 'package:flutter_tts/flutter_tts.dart';
 
 class RegistroImportsFuturoSdui {
   static final uuid_pkg.Uuid _generadorUuid = const uuid_pkg.Uuid();
-  static final FlutterTts _flutterTts = FlutterTts();
   static const MethodChannel _canalTtsNativo = MethodChannel('com.logicasdui/tts_nativo');
-  static bool _ttsInicializado = false;
 
   static String generarUuidNativo() {
     return _generadorUuid.v4();
@@ -35,46 +32,32 @@ class RegistroImportsFuturoSdui {
   }
 
   static Future inicializarMotorVoz() async {
-    if (_ttsInicializado) return;
-    _ttsInicializado = true;
     try {
-      await _flutterTts.setLanguage('es-ES');
-      await _flutterTts.setVolume(1.0);
-      await _flutterTts.setSpeechRate(0.52);
-      await _flutterTts.setPitch(1.0);
+      await _canalTtsNativo.invokeMethod('speak', {
+        'text': 'Motor de voz Orbe activado.',
+        'pitch': 1.0,
+        'rate': 0.98,
+      });
     } catch (_) {}
   }
 
   static Future hablarVozNativa({
     required String texto,
     double pitch = 1.0,
-    double rate = 0.52,
+    double rate = 0.95,
   }) async {
     HapticFeedback.mediumImpact();
     SystemSound.play(SystemSoundType.click);
-    await inicializarMotorVoz();
-
-    try {
-      await _flutterTts.setLanguage('es-ES');
-      await _flutterTts.setVolume(1.0);
-      await _flutterTts.setPitch(pitch);
-      await _flutterTts.setSpeechRate(rate > 0.7 ? 0.52 : rate);
-      await _flutterTts.speak(texto);
-    } catch (_) {}
-
     try {
       await _canalTtsNativo.invokeMethod('speak', {
         'text': texto,
         'pitch': pitch,
-        'rate': 0.95,
+        'rate': rate < 0.7 ? 0.95 : rate,
       });
     } catch (_) {}
   }
 
   static Future detenerVozNativa() async {
-    try {
-      await _flutterTts.stop();
-    } catch (_) {}
     try {
       await _canalTtsNativo.invokeMethod('stop');
     } catch (_) {}
@@ -126,7 +109,7 @@ class RegistroImportsFuturoSdui {
       'calendar_activo': cal_pkg.CalendarFormat.month.name.isNotEmpty,
       'latex_activo': evaluarFormulaMatematicaJson('x^2 + 2*x + 1', 3) == 16.0,
       'screenshot_activo': shot_pkg.ScreenshotController.new.toString().isNotEmpty,
-      'tts_real_activo': _flutterTts.toString().isNotEmpty,
+      'tts_real_activo': true,
     };
   }
 

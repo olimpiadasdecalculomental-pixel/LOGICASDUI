@@ -8,9 +8,9 @@ LT = chr(60)
 GT = chr(62)
 
 PUBSPEC_BLINDADO_18 = '''name: logica_sdui_fabrica_multiapp
-description: Super-APK Definitivo Esquema 1 - Todos los Imports Activos Sin Falla Gradle
+description: Super-APK Definitivo Esquema 1 - 25 Microservicios y Voz Nativa Android
 publish_to: 'none'
-version: 2.1.0+1
+version: 2.2.0+1
 
 environment:
   sdk: ^3.5.0
@@ -32,7 +32,6 @@ dependencies:
   qr_flutter: ^4.1.0
   expressions: ^0.2.5+2
   uuid: ^4.5.1
-  flutter_tts: ^4.1.0
   fl_chart: ^0.69.0
   table_calendar: ^3.1.2
   screenshot: ^3.0.0
@@ -62,10 +61,10 @@ def es_png_rgba_valido(data: bytes) -> bool:
     return False
 
 def inyectar_tts_nativo_en_main_activity():
-    kdir = pathlib.Path('android/app/src/main/kotlin')
-    if not kdir.exists():
+    main_dir = pathlib.Path('android/app/src/main')
+    if not main_dir.exists():
         return
-    for kt in kdir.rglob('MainActivity.kt'):
+    for kt in main_dir.rglob('MainActivity.kt'):
         txt = kt.read_text(encoding='utf-8')
         lineas = [l.strip() for l in txt.splitlines() if l.strip().startswith('package ')]
         if not lineas:
@@ -73,7 +72,12 @@ def inyectar_tts_nativo_en_main_activity():
         pkg_line = lineas[0]
         nuevo_kt = f'''{pkg_line}
 
+import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Bundle
+import android.os.PowerManager
 import android.speech.tts.TextToSpeech
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -82,16 +86,71 @@ import java.util.Locale
 
 class MainActivity: FlutterActivity(), TextToSpeech.OnInitListener {{
     private var tts: TextToSpeech? = null
+    private var ttsListo: Boolean = false
+    private var textoPendiente: String? = null
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {{
         super.onCreate(savedInstanceState)
-        tts = TextToSpeech(this, this)
+        try {{
+            val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+            wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "LogicaSdui::AvatarBolsilloLock")
+            wakeLock?.acquire(30 * 60 * 1000L)
+        }} catch (_: Exception) {{}}
+        tts = TextToSpeech(applicationContext, this)
     }}
 
     override fun onInit(status: Int) {{
         if (status == TextToSpeech.SUCCESS) {{
-            tts?.language = Locale("es", "ES")
+            val attrs = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
+            tts?.setAudioAttributes(attrs)
+
+            val rBo = tts?.setLanguage(Locale("es", "BO")) ?: TextToSpeech.LANG_NOT_SUPPORTED
+            if (rBo == TextToSpeech.LANG_MISSING_DATA || rBo == TextToSpeech.LANG_NOT_SUPPORTED) {{
+                val rEs = tts?.setLanguage(Locale("es", "ES")) ?: TextToSpeech.LANG_NOT_SUPPORTED
+                if (rEs == TextToSpeech.LANG_MISSING_DATA || rEs == TextToSpeech.LANG_NOT_SUPPORTED) {{
+                    tts?.setLanguage(Locale("es"))
+                }}
+            }}
+            ttsListo = true
+            val pend = textoPendiente
+            if (pend != null && pend.isNotEmpty()) {{
+                textoPendiente = null
+                hablarAhora(pend, 1.0f, 0.95f)
+            }}
         }}
+    }}
+
+    private fun hablarAhora(texto: String, pitch: Float, rate: Float) {{
+        try {{
+            val am = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            if (am != null) {{
+                val maxMusic = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                val curMusic = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+                if (curMusic <= 1) {{
+                    am.setStreamVolume(AudioManager.STREAM_MUSIC, (maxMusic * 0.75).toInt(), 0)
+                }}
+                val maxAlarm = am.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+                val curAlarm = am.getStreamVolume(AudioManager.STREAM_ALARM)
+                if (curAlarm <= 1) {{
+                    am.setStreamVolume(AudioManager.STREAM_ALARM, (maxAlarm * 0.80).toInt(), 0)
+                }}
+            }}
+            ToneGenerator(AudioManager.STREAM_ALARM, 85).startTone(ToneGenerator.TONE_PROP_BEEP, 140)
+        }} catch (_: Exception) {{}}
+
+        if (!ttsListo) {{
+            textoPendiente = texto
+            return
+        }}
+        tts?.setPitch(pitch)
+        tts?.setSpeechRate(rate)
+        val params = Bundle()
+        params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f)
+        tts?.speak(texto, TextToSpeech.QUEUE_FLUSH, params, "sdui_utt_" + System.currentTimeMillis())
     }}
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {{
@@ -103,9 +162,7 @@ class MainActivity: FlutterActivity(), TextToSpeech.OnInitListener {{
                 val rateNum: Number? = call.argument("rate")
                 val pitch = pitchNum?.toFloat() ?: 1.0f
                 val rate = rateNum?.toFloat() ?: 0.95f
-                tts?.setPitch(pitch)
-                tts?.setSpeechRate(rate)
-                tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "sdui_utt")
+                hablarAhora(text, pitch, rate)
                 result.success(true)
             }} else if (call.method == "stop") {{
                 tts?.stop()
@@ -117,6 +174,11 @@ class MainActivity: FlutterActivity(), TextToSpeech.OnInitListener {{
     }}
 
     override fun onDestroy() {{
+        try {{
+            if (wakeLock?.isHeld == true) {{
+                wakeLock?.release()
+            }}
+        }} catch (_: Exception) {{}}
         tts?.stop()
         tts?.shutdown()
         super.onDestroy()
@@ -195,18 +257,14 @@ def configurar_android():
             gp.write_text(gtxt, encoding='utf-8')
 
 def resolver_pubspec():
-    res = subprocess.run(['flutter', 'pub', 'get'])
-    if res.returncode == 0:
-        return
     pathlib.Path('pubspec.yaml').write_text(PUBSPEC_BLINDADO_18, encoding='utf-8')
     subprocess.run(['flutter', 'pub', 'get'], check=True)
 
 def compilar_apk():
-    res = subprocess.run(['flutter', 'build', 'apk', '--release', '--no-tree-shake-icons'])
-    if res.returncode != 0:
-        pathlib.Path('pubspec.yaml').write_text(PUBSPEC_BLINDADO_18, encoding='utf-8')
-        subprocess.run(['flutter', 'pub', 'get'], check=True)
-        subprocess.run(['flutter', 'build', 'apk', '--release', '--no-tree-shake-icons'], check=True)
+    inyectar_tts_nativo_en_main_activity()
+    pathlib.Path('pubspec.yaml').write_text(PUBSPEC_BLINDADO_18, encoding='utf-8')
+    subprocess.run(['flutter', 'pub', 'get'], check=True)
+    subprocess.run(['flutter', 'build', 'apk', '--release', '--no-tree-shake-icons'], check=True)
 
 if __name__ == '__main__':
     accion = sys.argv[1] if len(sys.argv) != 1 else 'android'
