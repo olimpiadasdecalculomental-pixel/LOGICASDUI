@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../nucleo/escudo_aislamiento.dart';
-import 'ms_06_pizarra_qr_optico.dart';
+import '../nucleo/registro_imports_futuro_sdui.dart';
+
 
 class Ms20MotorAtomicoUniversalSdui {
   static Widget construirHeaderOrbeJson({
@@ -345,7 +346,7 @@ class Ms20MotorAtomicoUniversalSdui {
                             child: SizedBox(
                               width: 170,
                               height: 170,
-                              child: CustomPaint(painter: PintorMatrizQrOptico(qrValor)),
+                              child: RegistroImportsFuturoSdui.construirQrVectorialReal(dataQr: qrValor, tamano: 150),
                             ),
                           ),
                         ),

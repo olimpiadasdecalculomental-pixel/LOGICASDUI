@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../nucleo/escudo_aislamiento.dart';
-import 'ms_06_pizarra_qr_optico.dart';
+import '../nucleo/registro_imports_futuro_sdui.dart';
+
 
 class Ms09TarjetaNeonBase {
   static Widget construirTarjetaNeonBase({
@@ -64,9 +65,7 @@ class Ms09TarjetaNeonBase {
                     child: SizedBox(
                       width: 145,
                       height: 145,
-                      child: CustomPaint(
-                        painter: PintorMatrizQrOptico(b['valor_qr_defecto']?.toString() ?? 'ORBE-QR'),
-                      ),
+                      child: RegistroImportsFuturoSdui.construirQrVectorialReal(dataQr: b['valor_qr_defecto']?.toString() ?? 'ORBE-QR', tamano: 140),
                     ),
                   ),
                   const SizedBox(height: 10),

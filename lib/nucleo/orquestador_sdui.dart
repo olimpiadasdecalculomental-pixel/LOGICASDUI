@@ -6,6 +6,7 @@ import 'puente_supabase_sdui.dart';
 import 'despachador_acciones.dart';
 import 'inspector_stitch.dart';
 import 'modales_candado_y_editor.dart';
+import 'registro_imports_futuro_sdui.dart';
 import '../microservicios/ms_01_header_y_grids.dart';
 import '../microservicios/ms_02_catalogo_y_drag_drop.dart';
 import '../microservicios/ms_03_wechat_y_ciencias.dart';
@@ -24,6 +25,10 @@ import '../microservicios/ms_17_diccionario_uxui_interactivo.dart';
 import '../microservicios/ms_18_app_imperio_clon.dart';
 import '../microservicios/ms_19_motores_imperio.dart';
 import '../microservicios/ms_20_motor_atomico_universal_sdui.dart';
+import '../microservicios/ms_21_juego_schulte_chimp_35.dart';
+import '../microservicios/ms_22_avatar_ia_bolsillo_voz.dart';
+import '../microservicios/ms_23_motores_reales_hardware_negocio.dart';
+import '../microservicios/ms_24_consola_universal_juegos_sdui.dart';
 
 class LienzoMaestroSdui extends StatefulWidget {
   const LienzoMaestroSdui({super.key});
@@ -72,8 +77,8 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
         {
           'id': 'card_sync_inicial',
           'tipo': 'TARJETA_NEON',
-          'titulo': '🔄 CONECTANDO CON SUPABASE ESQUEMA 1 (PURO JSON)',
-          'subtitulo': 'Ejecuta el Script SQL de Pantallas JSON en Supabase y toca el boton abajo para descargar el Clon 1:1 en Puro JSON.',
+          'titulo': '🔄 CONECTANDO CON SUPABASE ESQUEMA 1 (24 MICROSERVICIOS + 107 LIBRERIAS)',
+          'subtitulo': 'Toca el boton abajo para sincronizar las 10 Pantallas en Puro JSON (incluyendo Avatar de Bolsillo, Suite de Motores Reales y Consola de Juegos 16 a 50 Numeros).',
           'color_borde': '#00F3FF',
           'botones': [
             {
@@ -92,6 +97,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    RegistroImportsFuturoSdui.verificarMotoresCompiladosEnApk();
     _cargarPantallasDesdeSupabase();
   }
 
@@ -215,7 +221,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
     );
   }
 
-  Widget _renderizarBloqueCon20Microservicios(Map comp, double anchoPantalla) {
+  Widget _renderizarBloqueCon24Microservicios(Map comp, double anchoPantalla) {
     if (comp['pertenece_a_tab'] != null && comp['campo_estado_tab'] != null) {
       final String campoTab = comp['campo_estado_tab'].toString();
       final String tabRequerida = comp['pertenece_a_tab'].toString();
@@ -230,6 +236,37 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
 
     return ejecutarConEscudoMicroservicio(tipo, () {
       switch (tipo) {
+        case 'AVATAR_IA_BOLSILLO_VOZ':
+        case 'RECORDATORIO_HABLADO_BOLSILLO':
+          return Ms22AvatarIaBolsilloVoz(
+            bloque: comp,
+            onFeedback: _mostrarFeedback,
+          );
+
+        case 'SUITE_MOTORES_REALES_107':
+        case 'ESCANER_QR_REAL':
+        case 'MAPA_UBER_REAL':
+        case 'VISOR_3D_AR_REAL':
+        case 'CALENDARIO_CITAS_REAL':
+        case 'POS_TERMICO_STRIPE_OCR':
+          return Ms23MotoresRealesHardwareNegocio(
+            bloque: comp,
+            onFeedback: _mostrarFeedback,
+          );
+
+        case 'CONSOLA_JUEGOS_SDUI_24':
+        case 'JUEGO_SDUI_UNIVERSAL':
+          return Ms24ConsolaUniversalJuegosSdui(
+            bloque: comp,
+            onFeedback: _mostrarFeedback,
+          );
+
+        case 'MOTOR_SCHULTE_CHIMP_35':
+          return Ms21JuegoSchulteChimp35(
+            bloque: comp,
+            onFeedback: _mostrarFeedback,
+          );
+
         case 'HEADER_ORBE_JSON':
           return Ms20MotorAtomicoUniversalSdui.construirHeaderOrbeJson(
             b: comp,
@@ -358,7 +395,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
           return Ms10MotoresStacYJdw.construirMotorJsonDynamicHibrido(
             b: comp,
             constructorMotorNativoPorNombre: (cfgMotor) =>
-                _renderizarBloqueCon20Microservicios(cfgMotor, anchoPantalla),
+                _renderizarBloqueCon24Microservicios(cfgMotor, anchoPantalla),
             onDispararBoton: _dispararBotonSdui,
           );
 
@@ -450,7 +487,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
             child: ListView(
               padding: const EdgeInsets.all(14),
               children: [
-                ...bloques.map((b) => _renderizarBloqueCon20Microservicios(Map.from(b as Map), anchoPantalla)),
+                ...bloques.map((b) => _renderizarBloqueCon24Microservicios(Map.from(b as Map), anchoPantalla)),
               ],
             ),
           ),
