@@ -23,6 +23,7 @@ import '../microservicios/ms_16_fabrica_multi_app_usuarios.dart';
 import '../microservicios/ms_17_diccionario_uxui_interactivo.dart';
 import '../microservicios/ms_18_app_imperio_clon.dart';
 import '../microservicios/ms_19_motores_imperio.dart';
+import '../microservicios/ms_20_motor_atomico_universal_sdui.dart';
 
 class LienzoMaestroSdui extends StatefulWidget {
   const LienzoMaestroSdui({super.key});
@@ -51,34 +52,35 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
   String _motorImperioActivo = 'CINETV';
   Map _argsMotorImperio = {};
 
-  // Cada elemento de esta lista proviene de 1 fila (registro) de `esquema1.sdui_pantallas`
   List _pantallasSduiJson = [
     {
-      'id_pantalla': 'PANTALLA_01_LIENZO_BASE',
+      'id_pantalla': 'ORBE_01_LOGIN',
       'orden_pantalla': 1,
-      'titulo_pestana': 'LIENZO SDUI EN VACIO (100% PANTALLA COMPLETA)',
+      'titulo_pestana': '🦁 1. LOGIN ORBE',
       'rol_permitido': 'TODOS',
       'color_primario_pantalla': '#05050F',
-      'ux_ui_diseno_texto': 'Pantalla 100% completa sin barra superior de 9 botones. Fondo Cyber-Neon #05050F.',
-      'logica_negocio_texto': 'Cada fila en esquema1.sdui_pantallas es 1 pantalla JSON independiente conectada a los 19 Microservicios (ms_01 a ms_19).',
       'componentes_json': [
         {
-          'id': 'card_base_limpia',
+          'id': 'hero_login_espera',
+          'tipo': 'HERO_NEON_JSON',
+          'icono_emoji': '🦁',
+          'color_resplandor_icono': '#FFD700',
+          'titulo': 'MIS TALENTOS ORBE',
+          'color_titulo': '#FF0033',
+          'subtitulo': 'M E J O R A   T U S   T A L E N T O S',
+        },
+        {
+          'id': 'card_sync_inicial',
           'tipo': 'TARJETA_NEON',
-          'titulo': '🦁 ESQUEMA 1 EN LIMPIO · 100% PANTALLA COMPLETA',
-          'subtitulo': 'Base reiniciada de cero con 88 Librerias y los 19 Microservicios (ms_01 a ms_19) conectados al Orquestador SDUI sin botones arriba.',
+          'titulo': '🔄 CONECTANDO CON SUPABASE ESQUEMA 1 (PURO JSON)',
+          'subtitulo': 'Ejecuta el Script SQL de Pantallas JSON en Supabase y toca el boton abajo para descargar el Clon 1:1 en Puro JSON.',
           'color_borde': '#00F3FF',
-          'items_lista': [
-            '1 Registro en esquema1.sdui_pantallas = 1 Pantalla en JSON a pantalla completa',
-            'Toca 5 veces la esquina superior izquierda para abrir el Candado Admin (?1942?) y el Editor JSON en caliente',
-            'Listo para programar cada pantalla 1:1 del Clon de Mis Talentos Orbe (Login, SuperAdmin, Admin, Empresa, Usuario, Cine 4D y Mundo 3)'
-          ],
           'botones': [
             {
-              'texto': '🔄 SINCRONIZAR PANTALLAS JSON DESDE SUPABASE (ESQUEMA 1)',
-              'accion': 'EJECUTAR_RPC',
+              'texto': '🔄 DESCARGAR PANTALLAS JSON DE SUPABASE',
+              'accion': 'SINCRONIZAR_AHORA',
               'color': '#00FF66',
-              'color_texto': '#000000'
+              'color_texto': '#000000',
             }
           ],
         }
@@ -125,7 +127,63 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
     }
   }
 
+  void _navegarAPantallaPorId(String idPantallaDestino) {
+    final int idx = _pantallasSduiJson.indexWhere(
+      (p) => (p as Map)['id_pantalla']?.toString() == idPantallaDestino,
+    );
+    if (idx >= 0 && _pageCtrl.hasClients) {
+      HapticFeedback.mediumImpact();
+      _pageCtrl.animateToPage(
+        idx,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      setState(() => _indicePantallaActiva = idx);
+    } else {
+      _mostrarFeedback('Pantalla destino: $idPantallaDestino');
+    }
+  }
+
   void _dispararBotonSdui(Map btn, Map bloquePadre) {
+    final String accion = btn['accion']?.toString() ?? 'EJECUTAR_RPC';
+
+    if (accion == 'SINCRONIZAR_AHORA') {
+      _cargarPantallasDesdeSupabase();
+      return;
+    }
+
+    if (btn['set_session_nombre'] != null) {
+      _estadoForm['session_nombre'] = btn['set_session_nombre'].toString();
+    }
+    if (btn['set_session_rango'] != null) {
+      _estadoForm['session_rango'] = btn['set_session_rango'].toString();
+    }
+    if (btn['set_session_saldo'] != null) {
+      _estadoForm['session_saldo'] = btn['set_session_saldo'].toString();
+    }
+
+    if (accion == 'ABRIR_MODAL_JSON' && btn['modal_json'] is Map) {
+      Ms20MotorAtomicoUniversalSdui.abrirModalUniversalDesdeJson(
+        context: context,
+        configModal: Map.from(btn['modal_json'] as Map),
+        anchoPantalla: MediaQuery.of(context).size.width,
+        estadoForm: _estadoForm,
+        onActualizarCampo: (k, v) => setState(() => _estadoForm[k] = v),
+        onDispararBoton: _dispararBotonSdui,
+        onNavegarPantalla: _navegarAPantallaPorId,
+      );
+      return;
+    }
+
+    if (accion == 'NAVEGAR_PANTALLA_JSON' || btn['pantalla_destino'] != null) {
+      final String dest = btn['pantalla_destino']?.toString() ?? 'ORBE_01_LOGIN';
+      _navegarAPantallaPorId(dest);
+      if (btn['mensaje_toast'] != null) {
+        _mostrarFeedback(btn['mensaje_toast'].toString());
+      }
+      return;
+    }
+
     DespachadorAccionesSdui.dispararAccion(
       context: context,
       btn: btn,
@@ -151,17 +209,45 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
         setState(() {
           _pantallasSduiJson[_indicePantallaActiva] = nuevoReg;
         });
-        _mostrarFeedback('✅ JSON actualizado en caliente en Esquema 1.');
+        _mostrarFeedback('✅ JSON actualizado en caliente.');
       },
       alMostrarFeedback: _mostrarFeedback,
     );
   }
 
-  Widget _renderizarBloqueCon19Microservicios(Map comp, double anchoPantalla) {
+  Widget _renderizarBloqueCon20Microservicios(Map comp, double anchoPantalla) {
+    if (comp['pertenece_a_tab'] != null && comp['campo_estado_tab'] != null) {
+      final String campoTab = comp['campo_estado_tab'].toString();
+      final String tabRequerida = comp['pertenece_a_tab'].toString();
+      final String tabPorDefecto = comp['tab_por_defecto']?.toString() ?? tabRequerida;
+      final String tabActual = _estadoForm[campoTab]?.toString() ?? tabPorDefecto;
+      if (tabActual != tabRequerida) {
+        return const SizedBox.shrink();
+      }
+    }
+
     final String tipo = (comp['tipo']?.toString() ?? 'TARJETA_NEON').toUpperCase();
 
     return ejecutarConEscudoMicroservicio(tipo, () {
       switch (tipo) {
+        case 'HEADER_ORBE_JSON':
+          return Ms20MotorAtomicoUniversalSdui.construirHeaderOrbeJson(
+            b: comp,
+            estadoForm: _estadoForm,
+            onNavegarPantalla: _navegarAPantallaPorId,
+            onDispararBoton: _dispararBotonSdui,
+          );
+
+        case 'HERO_NEON_JSON':
+          return Ms20MotorAtomicoUniversalSdui.construirHeroNeonJson(comp);
+
+        case 'TABS_SUBPANTALLAS_JSON':
+          return Ms20MotorAtomicoUniversalSdui.construirBarraSubTabsJson(
+            b: comp,
+            estadoForm: _estadoForm,
+            onActualizarCampo: (k, v) => setState(() => _estadoForm[k] = v),
+          );
+
         case 'HEADER_IMPERIO':
           return Ms01HeaderYGrids.construirHeaderImperio(comp);
 
@@ -207,7 +293,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
             offsetVrX: _offsetVrX,
             onDragVrX: (dx) => setState(() => _offsetVrX = (_offsetVrX + dx).clamp(-120.0, 120.0)),
             onCambiarModo: (m) => setState(() => _modoRealidad = m),
-            onGuardarOffline: () => _mostrarFeedback('📥 Escena VR/AR guardada en Búnker Offline.'),
+            onGuardarOffline: () => _mostrarFeedback('📥 Escena VR/AR guardada en Bunker Offline.'),
           );
 
         case 'UBER_MAPA_RADAR_GPS':
@@ -272,7 +358,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
           return Ms10MotoresStacYJdw.construirMotorJsonDynamicHibrido(
             b: comp,
             constructorMotorNativoPorNombre: (cfgMotor) =>
-                _renderizarBloqueCon19Microservicios(cfgMotor, anchoPantalla),
+                _renderizarBloqueCon20Microservicios(cfgMotor, anchoPantalla),
             onDispararBoton: _dispararBotonSdui,
           );
 
@@ -364,7 +450,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
             child: ListView(
               padding: const EdgeInsets.all(14),
               children: [
-                ...bloques.map((b) => _renderizarBloqueCon19Microservicios(Map.from(b as Map), anchoPantalla)),
+                ...bloques.map((b) => _renderizarBloqueCon20Microservicios(Map.from(b as Map), anchoPantalla)),
               ],
             ),
           ),
