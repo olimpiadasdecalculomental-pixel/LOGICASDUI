@@ -29,6 +29,7 @@ import '../microservicios/ms_21_juego_schulte_chimp_35.dart';
 import '../microservicios/ms_22_avatar_ia_bolsillo_voz.dart';
 import '../microservicios/ms_23_motores_reales_hardware_negocio.dart';
 import '../microservicios/ms_24_consola_universal_juegos_sdui.dart';
+import '../microservicios/ms_25_catalogo_8_listas_con_botones.dart';
 
 class LienzoMaestroSdui extends StatefulWidget {
   const LienzoMaestroSdui({super.key});
@@ -77,12 +78,12 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
         {
           'id': 'card_sync_inicial',
           'tipo': 'TARJETA_NEON',
-          'titulo': '🔄 CONECTANDO CON SUPABASE ESQUEMA 1 (24 MICROSERVICIOS + 107 LIBRERIAS)',
-          'subtitulo': 'Toca el boton abajo para sincronizar las 10 Pantallas en Puro JSON (incluyendo Avatar de Bolsillo, Suite de Motores Reales y Consola de Juegos 16 a 50 Numeros).',
+          'titulo': '🔄 CONECTANDO CON SUPABASE ESQUEMA 1 (25 MICROSERVICIOS + 15 PANTALLAS)',
+          'subtitulo': 'Toca el boton abajo para descargar las 15 Pantallas en Puro JSON (incluyendo los 5 Juegos Completos, las 8 Listas con Botones y el Avatar de Bolsillo).',
           'color_borde': '#00F3FF',
           'botones': [
             {
-              'texto': '🔄 DESCARGAR PANTALLAS JSON DE SUPABASE',
+              'texto': '🔄 DESCARGAR LAS 15 PANTALLAS JSON DE SUPABASE',
               'accion': 'SINCRONIZAR_AHORA',
               'color': '#00FF66',
               'color_texto': '#000000',
@@ -97,6 +98,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    RegistroImportsFuturoSdui.inicializarMotorVoz();
     RegistroImportsFuturoSdui.verificarMotoresCompiladosEnApk();
     _cargarPantallasDesdeSupabase();
   }
@@ -221,7 +223,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
     );
   }
 
-  Widget _renderizarBloqueCon24Microservicios(Map comp, double anchoPantalla) {
+  Widget _renderizarBloqueCon25Microservicios(Map comp, double anchoPantalla) {
     if (comp['pertenece_a_tab'] != null && comp['campo_estado_tab'] != null) {
       final String campoTab = comp['campo_estado_tab'].toString();
       final String tabRequerida = comp['pertenece_a_tab'].toString();
@@ -233,12 +235,22 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
     }
 
     final String tipo = (comp['tipo']?.toString() ?? 'TARJETA_NEON').toUpperCase();
+    final String keyId = '${comp['id'] ?? tipo}_${comp['motor_inicial'] ?? ''}';
 
     return ejecutarConEscudoMicroservicio(tipo, () {
       switch (tipo) {
+        case 'CATALOGO_8_LISTAS_UXUI':
+        case 'LISTAS_CON_BOTONES_SDUI':
+          return Ms25Catalogo8ListasConBotones(
+            key: ValueKey(keyId),
+            bloque: comp,
+            onFeedback: _mostrarFeedback,
+          );
+
         case 'AVATAR_IA_BOLSILLO_VOZ':
         case 'RECORDATORIO_HABLADO_BOLSILLO':
           return Ms22AvatarIaBolsilloVoz(
+            key: ValueKey(keyId),
             bloque: comp,
             onFeedback: _mostrarFeedback,
           );
@@ -250,19 +262,27 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
         case 'CALENDARIO_CITAS_REAL':
         case 'POS_TERMICO_STRIPE_OCR':
           return Ms23MotoresRealesHardwareNegocio(
+            key: ValueKey(keyId),
             bloque: comp,
             onFeedback: _mostrarFeedback,
           );
 
+        case 'JUEGO_1_SCHULTE_35':
+        case 'JUEGO_2_MATEMATICAS':
+        case 'JUEGO_3_MEMORIA_MATRIZ':
+        case 'JUEGO_4_LLUVIA_CLASIF':
+        case 'JUEGO_5_8_INTELIGENCIAS':
         case 'CONSOLA_JUEGOS_SDUI_24':
         case 'JUEGO_SDUI_UNIVERSAL':
           return Ms24ConsolaUniversalJuegosSdui(
+            key: ValueKey(keyId),
             bloque: comp,
             onFeedback: _mostrarFeedback,
           );
 
         case 'MOTOR_SCHULTE_CHIMP_35':
           return Ms21JuegoSchulteChimp35(
+            key: ValueKey(keyId),
             bloque: comp,
             onFeedback: _mostrarFeedback,
           );
@@ -395,7 +415,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
           return Ms10MotoresStacYJdw.construirMotorJsonDynamicHibrido(
             b: comp,
             constructorMotorNativoPorNombre: (cfgMotor) =>
-                _renderizarBloqueCon24Microservicios(cfgMotor, anchoPantalla),
+                _renderizarBloqueCon25Microservicios(cfgMotor, anchoPantalla),
             onDispararBoton: _dispararBotonSdui,
           );
 
@@ -487,7 +507,7 @@ class _LienzoMaestroSduiState extends State with WidgetsBindingObserver {
             child: ListView(
               padding: const EdgeInsets.all(14),
               children: [
-                ...bloques.map((b) => _renderizarBloqueCon24Microservicios(Map.from(b as Map), anchoPantalla)),
+                ...bloques.map((b) => _renderizarBloqueCon25Microservicios(Map.from(b as Map), anchoPantalla)),
               ],
             ),
           ),

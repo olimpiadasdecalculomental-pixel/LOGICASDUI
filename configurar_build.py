@@ -32,6 +32,7 @@ dependencies:
   qr_flutter: ^4.1.0
   expressions: ^0.2.5+2
   uuid: ^4.5.1
+  flutter_tts: ^4.1.0
   fl_chart: ^0.69.0
   table_calendar: ^3.1.2
   screenshot: ^3.0.0

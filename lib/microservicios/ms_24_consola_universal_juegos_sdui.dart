@@ -25,271 +25,278 @@ class _Ms24ConsolaUniversalJuegosSduiState extends State {
   late final ConfettiController _confettiCtrl;
   Timer? _timerJuego;
 
-  String _juegoActivo = 'SCHULTE_PRO_50';
-  bool _vozAvatarActiva = true;
-  String _mensajeAvatarActual = 'Hola campeon Orbe. Elige un juego o modifica sus reglas desde JSON en Supabase.';
-
-  int _cantNumeros = 25;
-  String _modoSchulte = 'PRESIONAR';
-  List _tableroSchulte = [];
-  int _objetivoSchulte = 1;
-  bool _ocultoChimp = false;
+  String _juegoActivo = 'VEDIC_MATH_IA';
+  bool _vozActiva = true;
+  String _fraseAvatar = 'Listo para entrenar tus 8 inteligencias con voz y records en vivo.';
+  int _puntosTotales = 1850;
+  int _recordsBatidos = 4;
   int _tiempoMs = 0;
-  bool _corriendoReloj = false;
+  bool _relojActivo = false;
 
-  int _numA = 14;
-  int _numB = 16;
-  String _operadorVedico = '×';
-  int _respuestaCorrectaVedica = 224;
-  List _opcionesVedicas = [224, 214, 234, 196];
-  int _aciertosVedicos = 0;
+  int _cantNums = 25;
+  String _modoSchulte = 'PRESIONAR';
+  List _tableroNums = [];
+  int _objSchulte = 1;
+  bool _ocultoChimp = false;
 
-  String _objetivoRain = 'A-7';
-  List _burbujasRain = ['A-7', 'B-9', 'K-4', 'M-2', 'X-5', 'Z-1', 'P-8', 'R-3'];
+  String _nivelMat = 'DIFICIL_VEDICO';
+  String _enunciadoMat = '14 × 16 = ?';
+  String _trucoMat = 'Truco Vedico: (14+6)×10 + (4×6) = 200 + 24 = 224';
+  int _respCorrectaMat = 224;
+  List _opcionesMat = [224, 214, 234, 196];
+  int _rachaMat = 0;
+  int _vidasMat = 3;
+
+  int _tamMatriz = 3;
+  Set _patronObjetivo = {0, 4, 8};
+  final Set _patronUsuario = {};
+  bool _mostrandoPatron = false;
+
+  String _objRain = 'M-7 (NATURALISTA 🌿)';
+  List _itemsRain = ['M-7 (NATURALISTA 🌿)', 'A-2 (LOGICA 🧮)', 'K-9 (MUSICAL 🎵)', 'Z-4 (ESPACIAL 📐)', 'P-5 (EMPATIA 🤝)', 'R-8 (VERBAL 📖)'];
   int _comboRain = 0;
 
-  String _secuenciaDigitSpan = '74928';
-  bool _mostrandoSecuencia = true;
-  final TextEditingController _ctrlRespuestaSpan = TextEditingController();
-  int _nivelSpan = 5;
-
-  int _puntosConsola = 1850;
-  int _recordsBatidos = 4;
+  int _idxRetoGardner = 0;
+  static const List _retosGardner = [
+    {
+      'intel': '1. Inteligencia Musical y Tono Vocal 🎵',
+      'preg': 'Si un Leon ruge a 110 Hz (Grave) y un Pajaro canta a 880 Hz (Agudo), ¿cual tiene mayor frecuencia?',
+      'ops': ['🐦 Pajaro (880 Hz - Correcta)', '🦁 Leon (110 Hz)', '🥁 Tambor (60 Hz)', '🎸 Bajo (80 Hz)'],
+      'ok': 0
+    },
+    {
+      'intel': '2. Inteligencia Interpersonal y Empatia 🤝',
+      'preg': 'Un compañero pierde su racha en la Olimpiada Escolar. ¿Que accion fortalece al equipo?',
+      'ops': ['🤝 Explicarle el truco vedico y animarlo (Correcta)', 'Ignorarlo', 'Burlarse del tiempo', 'Cerrar la sala'],
+      'ok': 0
+    },
+    {
+      'intel': '3. Inteligencia Naturalista y Clasificacion 🌿',
+      'preg': '¿Cual de estos elementos pertenece a energia limpia renovable para una ciudad inteligente?',
+      'ops': ['☀️ Panel Solar + Hidrogeno Verde (Correcta)', 'Carbon mineral', 'Diesel pesado', 'Plomo'],
+      'ok': 0
+    },
+    {
+      'intel': '4. Inteligencia Intrapersonal y Bio-Termometro 💖',
+      'preg': 'Antes de un examen cronometrado de 35 numeros, ¿que tecnica reduce el tiempo de duda?',
+      'ops': ['🧘 Respiracion 4-4 y fijar vista al centro (Correcta)', 'Mirar al azar', 'Apretar botones sin leer', 'Subir estres'],
+      'ok': 0
+    },
+  ];
 
   @override
   void initState() {
     super.initState();
     _confettiCtrl = ConfettiController(duration: const Duration(seconds: 2));
-    _configurarDesdeJsonSupabase();
-    _prepararTableroSchulte(iniciar: false);
-    _generarRetoVedico();
-  }
-
-  void _configurarDesdeJsonSupabase() {
     final Map b = (widget as Ms24ConsolaUniversalJuegosSdui).bloque;
-    if (b['motor_inicial'] != null) {
-      _juegoActivo = b['motor_inicial'].toString();
-    }
-    if (b['cantidad_numeros_inicial'] is num) {
-      _cantNumeros = (b['cantidad_numeros_inicial'] as num).toInt();
-    }
-    if (b['saludo_avatar'] != null) {
-      _mensajeAvatarActual = b['saludo_avatar'].toString();
-    }
-  }
-
-  Future _avatarHablar(String frase) async {
-    if (!mounted) return;
-    setState(() => _mensajeAvatarActual = frase);
-    if (!_vozAvatarActiva) return;
-    await RegistroImportsFuturoSdui.hablarVozNativa(texto: frase, pitch: 1.05, rate: 0.96);
+    if (b['motor_inicial'] != null) _juegoActivo = b['motor_inicial'].toString();
+    if (b['cantidad_numeros_inicial'] is num) _cantNums = (b['cantidad_numeros_inicial'] as num).toInt();
+    if (b['nivel_matematicas_inicial'] != null) _nivelMat = b['nivel_matematicas_inicial'].toString();
+    if (b['saludo_avatar'] != null) _fraseAvatar = b['saludo_avatar'].toString();
+    _prepararSchulte(iniciar: false);
+    _generarPreguntaMatematicas(hablar: false);
+    _generarPatronMatriz();
   }
 
   @override
   void dispose() {
     _timerJuego?.cancel();
     _confettiCtrl.dispose();
-    RegistroImportsFuturoSdui.detenerVozNativa();
-    _ctrlRespuestaSpan.dispose();
     super.dispose();
   }
 
-  void _prepararTableroSchulte({required bool iniciar}) {
-    _timerJuego?.cancel();
-    final List nums = List.generate(_cantNumeros, (i) => i + 1)..shuffle(_rng);
-    setState(() {
-      _tableroSchulte = nums;
-      _objetivoSchulte = 1;
-      _ocultoChimp = false;
-      _tiempoMs = 0;
-      _corriendoReloj = iniciar;
-    });
-    if (iniciar) {
-      _arrancarReloj();
-      _avatarHablar(
-        _modoSchulte == 'SOLO_MENTAL'
-            ? 'Modo solo mental de $_cantNumeros numeros. Busca con tus ojos del 1 al $_cantNumeros.'
-            : 'Tablero de $_cantNumeros numeros activado. Busca el numero 1.',
-      );
-    }
+  Future _hablar(String txt) async {
+    if (!mounted) return;
+    setState(() => _fraseAvatar = txt);
+    if (!_vozActiva) return;
+    await RegistroImportsFuturoSdui.hablarVozNativa(texto: txt);
   }
 
-  void _arrancarReloj() {
+  void _iniciarReloj() {
     _timerJuego?.cancel();
+    _tiempoMs = 0;
+    _relojActivo = true;
     _timerJuego = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      if (!mounted || !_corriendoReloj) return;
-      setState(() => _tiempoMs += 100);
+      if (mounted && _relojActivo) setState(() => _tiempoMs += 100);
     });
   }
 
-  void _tocarNumeroSchulte(int n) {
-    if (_modoSchulte == 'SOLO_MENTAL') {
-      if (!_corriendoReloj) {
-        _prepararTableroSchulte(iniciar: true);
-      }
-      return;
-    }
-
-    if (!_corriendoReloj && n == 1) {
-      _arrancarReloj();
-      setState(() {
-        _corriendoReloj = true;
-        _objetivoSchulte = 2;
-        if (_modoSchulte == 'CHIMP') _ocultoChimp = true;
-      });
-      HapticFeedback.lightImpact();
-      return;
-    }
-
-    if (!_corriendoReloj) return;
-
-    if (n == _objetivoSchulte) {
-      HapticFeedback.selectionClick();
-      setState(() {
-        if (_objetivoSchulte == 1 && _modoSchulte == 'CHIMP') {
-          _ocultoChimp = true;
-        }
-        _objetivoSchulte++;
-        _puntosConsola += 25;
-      });
-
-      if (_objetivoSchulte == (_cantNumeros ~/ 2)) {
-        _avatarHablar('Vas por la mitad, excelente ritmo.');
-      }
-
-      if (_objetivoSchulte > _cantNumeros) {
-        _celebrarVictoria('Tablero de $_cantNumeros numeros completado en ${(_tiempoMs / 1000).toStringAsFixed(1)} segundos.');
-      }
-    } else {
-      HapticFeedback.heavyImpact();
-      _avatarHablar('Busca el numero $_objetivoSchulte.');
-    }
-  }
-
-  void _generarRetoVedico() {
-    final int a = 11 + _rng.nextInt(19);
-    final int b = 11 + _rng.nextInt(19);
-    final int ok = a * b;
-    final List ops = [ok, ok + 10, ok - 10, ok + 4]..shuffle(_rng);
-    setState(() {
-      _numA = a;
-      _numB = b;
-      _operadorVedico = '×';
-      _respuestaCorrectaVedica = ok;
-      _opcionesVedicas = ops;
-    });
-  }
-
-  void _responderVedico(int valorElegido) {
-    if (valorElegido == _respuestaCorrectaVedica) {
-      HapticFeedback.mediumImpact();
-      setState(() {
-        _aciertosVedicos++;
-        _puntosConsola += 80;
-      });
-      if (_aciertosVedicos % 3 == 0) {
-        _confettiCtrl.play();
-        _avatarHablar('Racha vedica perfecta de $_aciertosVedicos aciertos.');
-      }
-      _generarRetoVedico();
-    } else {
-      HapticFeedback.heavyImpact();
-      _avatarHablar('Casi. $_numA por $_numB es $_respuestaCorrectaVedica.');
-    }
-  }
-
-  void _tocarBurbujaRain(String codigo) {
-    if (codigo == _objetivoRain) {
-      HapticFeedback.lightImpact();
-      final List nuevas = List.from(_burbujasRain)..shuffle(_rng);
-      final String nuevoObj = nuevas[_rng.nextInt(nuevas.length)].toString();
-      setState(() {
-        _comboRain++;
-        _puntosConsola += 40;
-        _burbujasRain = nuevas;
-        _objetivoRain = nuevoObj;
-      });
-      if (_comboRain % 5 == 0) {
-        _confettiCtrl.play();
-        _avatarHablar('Combo de reflejos por $_comboRain. Ahora atrapa $nuevoObj.');
-      }
-    } else {
-      HapticFeedback.heavyImpact();
-      setState(() => _comboRain = 0);
-      _avatarHablar('Objetivo incorrecto, busca $_objetivoRain.');
-    }
-  }
-
-  void _generarSecuenciaDigitSpan() {
-    String s = '';
-    for (int i = 0; i < _nivelSpan; i++) {
-      s += '${1 + _rng.nextInt(9)}';
-    }
-    setState(() {
-      _secuenciaDigitSpan = s;
-      _mostrandoSecuencia = true;
-      _ctrlRespuestaSpan.clear();
-    });
-    _avatarHablar('Memoriza estos $_nivelSpan digitos.');
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted) {
-        setState(() => _mostrandoSecuencia = false);
-      }
-    });
-  }
-
-  void _verificarDigitSpan() {
-    if (_ctrlRespuestaSpan.text.trim() == _secuenciaDigitSpan) {
-      setState(() {
-        _nivelSpan++;
-        _puntosConsola += 150;
-      });
-      _celebrarVictoria('Memoria exacta. Subes a $_nivelSpan digitos.');
-      _generarSecuenciaDigitSpan();
-    } else {
-      HapticFeedback.heavyImpact();
-      _avatarHablar('La secuencia era $_secuenciaDigitSpan. Intentemos otra vez.');
-      _generarSecuenciaDigitSpan();
-    }
-  }
-
-  Future _celebrarVictoria(String detalle) async {
+  Future _guardarRecordSupabase(String detalle) async {
+    _relojActivo = false;
     _timerJuego?.cancel();
     _confettiCtrl.play();
-    setState(() {
-      _corriendoReloj = false;
-      _ocultoChimp = false;
-      _recordsBatidos++;
-    });
-    await _avatarHablar('Felicidades. $detalle');
+    setState(() => _recordsBatidos++);
+    await _hablar(detalle);
     (widget as Ms24ConsolaUniversalJuegosSdui).onFeedback('🏆 $detalle');
-
     await PuenteSupabaseSdui.ejecutarRpcUniversal(
       'esq1_rpc_guardar_app_o_usuario',
       {
         'p_operacion': 'GUARDAR_AVANCE_CEREBRAL_35',
-        'p_nivel': '$_juegoActivo ($_cantNumeros)',
+        'p_nivel': '$_juegoActivo ($_nivelMat / $_cantNums)',
         'p_modo_juego': _modoSchulte,
         'p_tiempo_ms': _tiempoMs,
-        'p_puntos': _puntosConsola,
+        'p_puntos': _puntosTotales,
       },
       esquemaOverride: 'esquema1',
     );
   }
 
+  void _prepararSchulte({required bool iniciar}) {
+    final List l = List.generate(_cantNums, (i) => i + 1)..shuffle(_rng);
+    setState(() {
+      _tableroNums = l;
+      _objSchulte = 1;
+      _ocultoChimp = false;
+      _relojActivo = iniciar;
+    });
+    if (iniciar) {
+      _iniciarReloj();
+      _hablar('Tablero de $_cantNums numeros iniciado. Busca el 1.');
+    }
+  }
+
+  void _tocarCeldaSchulte(int val) {
+    if (_modoSchulte == 'SOLO_MENTAL') {
+      if (!_relojActivo) _prepararSchulte(iniciar: true);
+      return;
+    }
+    if (!_relojActivo && val == 1) {
+      _iniciarReloj();
+      setState(() {
+        _objSchulte = 2;
+        if (_modoSchulte == 'CHIMP') _ocultoChimp = true;
+      });
+      return;
+    }
+    if (!_relojActivo) return;
+    if (val == _objSchulte) {
+      HapticFeedback.selectionClick();
+      setState(() {
+        if (_objSchulte == 1 && _modoSchulte == 'CHIMP') _ocultoChimp = true;
+        _objSchulte++;
+        _puntosTotales += 25;
+      });
+      if (_objSchulte > _cantNums) {
+        _guardarRecordSupabase('Completaste $_cantNums numeros en ${(_tiempoMs / 1000).toStringAsFixed(1)} segundos.');
+      }
+    } else {
+      HapticFeedback.heavyImpact();
+      _hablar('Busca el numero $_objSchulte');
+    }
+  }
+
+  void _generarPreguntaMatematicas({bool hablar = true}) {
+    int ok = 0;
+    String enun = '';
+    String truco = '';
+    if (_nivelMat == 'BASICO') {
+      final int a = 15 + _rng.nextInt(45);
+      final int b = 12 + _rng.nextInt(35);
+      ok = a + b;
+      enun = '$a + $b = ?';
+      truco = 'Suma por decenas: (${a ~/ 10 * 10}+${b ~/ 10 * 10}) + (${a % 10}+${b % 10}) = $ok';
+    } else if (_nivelMat == 'MEDIO') {
+      final int a = 6 + _rng.nextInt(9);
+      final int b = 7 + _rng.nextInt(9);
+      ok = a * b;
+      enun = '$a × $b = ?';
+      truco = 'Multiplicacion rapida: $a por $b es igual a $ok';
+    } else if (_nivelMat == 'DIFICIL_VEDICO') {
+      final int a = 11 + _rng.nextInt(9);
+      final int b = 11 + _rng.nextInt(9);
+      ok = a * b;
+      enun = '$a × $b = ?';
+      truco = 'Metodo Vedico Base 10: ($a + ${b - 10})×10 + (${a - 10}×${b - 10}) = $ok';
+    } else {
+      final int xVal = 3 + _rng.nextInt(12);
+      final int m = 2 + _rng.nextInt(5);
+      final int suma = 5 + _rng.nextInt(15);
+      final int total = m * xVal + suma;
+      ok = xVal;
+      enun = '${m}x + $suma = $total   ➔   x = ?';
+      truco = 'Despeje Algebraico: x = ($total - $suma) / $m = $ok';
+    }
+    final List ops = [ok, ok + 2, math.max(1, ok - 3), ok + 10]..shuffle(_rng);
+    setState(() {
+      _enunciadoMat = enun;
+      _trucoMat = truco;
+      _respCorrectaMat = ok;
+      _opcionesMat = ops;
+    });
+    if (!_relojActivo) _iniciarReloj();
+    if (hablar) _hablar('Resuelve: $enun');
+  }
+
+  void _responderMatematicas(int elegido) {
+    if (elegido == _respCorrectaMat) {
+      HapticFeedback.mediumImpact();
+      setState(() {
+        _rachaMat++;
+        _puntosTotales += 80 + (_rachaMat * 10);
+      });
+      if (_rachaMat % 3 == 0) {
+        _guardarRecordSupabase('Racha matematica de $_rachaMat aciertos seguidos.');
+      } else {
+        _hablar('Correcto, es $_respCorrectaMat.');
+      }
+      _generarPreguntaMatematicas(hablar: false);
+    } else {
+      HapticFeedback.heavyImpact();
+      setState(() {
+        _rachaMat = 0;
+        _vidasMat = math.max(1, _vidasMat - 1);
+      });
+      _hablar('Respuesta incorrecta. Observa el truco vedico en pantalla.');
+    }
+  }
+
+  void _generarPatronMatriz() {
+    final int totalCeldas = _tamMatriz * _tamMatriz;
+    final Set nuevo = {};
+    while (nuevo.length < _tamMatriz + 1) {
+      nuevo.add(_rng.nextInt(totalCeldas));
+    }
+    setState(() {
+      _patronObjetivo = nuevo;
+      _patronUsuario.clear();
+      _mostrandoPatron = true;
+    });
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _mostrandoPatron = false);
+    });
+  }
+
+  void _tocarCeldaMatriz(int idx) {
+    if (_mostrandoPatron) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      if (_patronUsuario.contains(idx)) {
+        _patronUsuario.remove(idx);
+      } else {
+        _patronUsuario.add(idx);
+      }
+    });
+    if (_patronUsuario.length == _patronObjetivo.length) {
+      if (_patronUsuario.containsAll(_patronObjetivo)) {
+        setState(() => _puntosTotales += 120);
+        _guardarRecordSupabase('Memoria espacial ${_tamMatriz}x$_tamMatriz superada.');
+        _generarPatronMatriz();
+      } else {
+        _hablar('Patron incompleto, intenta de nuevo.');
+        _generarPatronMatriz();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final List nivelesJson = ((widget as Ms24ConsolaUniversalJuegosSdui).bloque['niveles_numeros'] as List?) ??
-        [16, 25, 30, 35, 50];
-
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFF060B19),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFF00FC), width: 1.8),
-        boxShadow: const [BoxShadow(color: Color(0x33FF00FC), blurRadius: 16)],
+        border: Border.all(color: const Color(0xFF00FF66), width: 1.8),
       ),
       child: Stack(
         alignment: Alignment.topCenter,
@@ -298,62 +305,35 @@ class _Ms24ConsolaUniversalJuegosSduiState extends State {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1E1B4B), Color(0xFF0A0A1C)],
-                  ),
+                  color: const Color(0xFF142033),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFF00F3FF)),
                 ),
                 child: Row(
                   children: [
-                    GestureDetector(
-                      onTap: () => _avatarHablar(_mensajeAvatarActual),
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF00F3FF).withAlpha(40),
-                          border: Border.all(color: const Color(0xFF00FF66), width: 2),
-                        ),
-                        child: const Text('🤖', style: TextStyle(fontSize: 24)),
-                      ),
+                    InkWell(
+                      onTap: () => _hablar(_fraseAvatar),
+                      child: const CircleAvatar(backgroundColor: Color(0xFF00FF66), child: Text('🤖', style: TextStyle(fontSize: 20))),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                '🎮 CONSOLA SDUI + AVATAR IA PARLANTE',
-                                style: TextStyle(color: Color(0xFF00FF66), fontSize: 11.5, fontWeight: FontWeight.w900),
-                              ),
-                              Text(
-                                '⭐ $_puntosConsola Pts · 🏆 $_recordsBatidos',
-                                style: const TextStyle(color: Color(0xFFFFD700), fontSize: 10.5, fontWeight: FontWeight.w900),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            '🗣️ "$_mensajeAvatarActual"',
-                            style: const TextStyle(color: Colors.white, fontSize: 11, fontStyle: FontStyle.italic),
-                          ),
+                          Text('⭐ $_puntosTotales PTS · 🏆 Records: $_recordsBatidos · ⏱️ ${(_tiempoMs / 1000).toStringAsFixed(1)}s',
+                              style: const TextStyle(color: Color(0xFFFFD700), fontSize: 11, fontWeight: FontWeight.w900)),
+                          Text('🗣️ "$_fraseAvatar"', style: const TextStyle(color: Colors.white, fontSize: 10.5)),
                         ],
                       ),
                     ),
                     IconButton(
-                      onPressed: () => setState(() => _vozAvatarActiva = !_vozAvatarActiva),
-                      icon: Icon(
-                        _vozAvatarActiva ? Icons.volume_up : Icons.volume_off,
-                        color: _vozAvatarActiva ? const Color(0xFF00FF66) : Colors.grey,
-                      ),
+                      icon: Icon(_vozActiva ? Icons.volume_up : Icons.volume_off, color: const Color(0xFF00FF66)),
+                      onPressed: () {
+                        setState(() => _vozActiva = true);
+                        _hablar(_fraseAvatar);
+                      },
                     ),
                   ],
                 ),
@@ -363,10 +343,11 @@ class _Ms24ConsolaUniversalJuegosSduiState extends State {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _chipMotorJuego('SCHULTE_PRO_50', '🔢 1. Numeros (16 a 50)', const Color(0xFF00FF66)),
-                    _chipMotorJuego('VEDIC_MATH_IA', '🧮 2. Calculo Vedico IA', const Color(0xFF00F3FF)),
-                    _chipMotorJuego('ALPHA_RAIN_2D', '🌧️ 3. Lluvia Alfanumerica', const Color(0xFFFF00FC)),
-                    _chipMotorJuego('DIGIT_SPAN_MEM', '🧠 4. Memoria Secuencial', const Color(0xFFFFD700)),
+                    _chipJuego('SCHULTE_PRO_50', '🔢 1. Numeros (16-50)', const Color(0xFF00FF66)),
+                    _chipJuego('VEDIC_MATH_IA', '🧮 2. Matematicas Pro', const Color(0xFF00F3FF)),
+                    _chipJuego('GRID_DIGIT_MEM', '🧠 3. Matriz Memoria', const Color(0xFFFFD700)),
+                    _chipJuego('ALPHA_RAIN_2D', '🌧️ 4. Lluvia & Clasif.', const Color(0xFFFF00FC)),
+                    _chipJuego('GARDNER_8_VOZ', '🎓 5. 8 Inteligencias', const Color(0xFF00FF66)),
                   ],
                 ),
               ),
@@ -374,355 +355,261 @@ class _Ms24ConsolaUniversalJuegosSduiState extends State {
               if (_juegoActivo == 'SCHULTE_PRO_50') ...[
                 Wrap(
                   spacing: 6,
-                  runSpacing: 6,
-                  alignment: WrapAlignment.spaceBetween,
-                  children: [
-                    ...nivelesJson.map((rawN) {
-                      final int n = (rawN as num).toInt();
-                      final bool sel = _cantNumeros == n;
-                      return ChoiceChip(
-                        label: Text(
-                          '$n Nums',
-                          style: TextStyle(
-                            color: sel ? Colors.black : Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        selected: sel,
-                        selectedColor: const Color(0xFF00FF66),
-                        backgroundColor: const Color(0xFF142033),
-                        onSelected: (_) {
-                          setState(() => _cantNumeros = n);
-                          _prepararTableroSchulte(iniciar: false);
+                  children: [16, 25, 30, 35, 50].map((n) => ChoiceChip(
+                    label: Text('$n Nums', style: TextStyle(color: _cantNums == n ? Colors.black : Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    selected: _cantNums == n,
+                    selectedColor: const Color(0xFF00FF66),
+                    onSelected: (_) {
+                      setState(() => _cantNums = n);
+                      _prepararSchulte(iniciar: false);
+                    },
+                  )).toList(),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: ['PRESIONAR', 'SOLO_MENTAL', 'CHIMP'].map((m) => Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(backgroundColor: _modoSchulte == m ? const Color(0xFF00F3FF) : Colors.black),
+                        onPressed: () {
+                          setState(() => _modoSchulte = m);
+                          _prepararSchulte(iniciar: false);
                         },
-                      );
-                    }),
-                  ],
+                        child: Text(m, style: TextStyle(color: _modoSchulte == m ? Colors.black : Colors.white, fontSize: 9.5, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  )).toList(),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _btnModoCorto('PRESIONAR', '👆 Presionar', const Color(0xFF00FF66)),
-                    const SizedBox(width: 6),
-                    _btnModoCorto('SOLO_MENTAL', '🧠 Solo Mental', const Color(0xFF00F3FF)),
-                    const SizedBox(width: 6),
-                    _btnModoCorto('CHIMP', '🐒 Chimp Oculto', const Color(0xFFFFD700)),
-                  ],
-                ),
-                const SizedBox(height: 10),
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: _cantNumeros == 16 ? 4 : 5,
-                    crossAxisSpacing: 6,
-                    mainAxisSpacing: 6,
-                    childAspectRatio: _cantNumeros >= 35 ? 1.25 : 1.05,
+                    crossAxisCount: _cantNums == 16 ? 4 : 5,
+                    crossAxisSpacing: 5,
+                    mainAxisSpacing: 5,
+                    childAspectRatio: _cantNums >= 35 ? 1.3 : 1.05,
                   ),
-                  itemCount: _tableroSchulte.length,
-                  itemBuilder: (ctx, idx) {
-                    final int val = (_tableroSchulte[idx] as num).toInt();
-                    final bool hecho = _modoSchulte != 'SOLO_MENTAL' && val < _objetivoSchulte;
+                  itemCount: _tableroNums.length,
+                  itemBuilder: (ctx, i) {
+                    final int v = (_tableroNums[i] as num).toInt();
+                    final bool ok = _modoSchulte != 'SOLO_MENTAL' && v < _objSchulte;
                     return InkWell(
-                      onTap: () => _tocarNumeroSchulte(val),
-                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => _tocarCeldaSchulte(v),
                       child: Container(
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: hecho
-                              ? const Color(0xFF052E16)
-                              : (_ocultoChimp ? const Color(0xFF1E293B) : const Color(0xFF0F172A)),
+                          color: ok ? const Color(0xFF052E16) : const Color(0xFF0F172A),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: hecho ? const Color(0xFF00FF66) : const Color(0xFF00F3FF),
-                            width: 1.3,
-                          ),
+                          border: Border.all(color: ok ? const Color(0xFF00FF66) : const Color(0xFF00F3FF)),
                         ),
-                        child: Text(
-                          _ocultoChimp && !hecho ? '?' : '$val',
-                          style: TextStyle(
-                            color: hecho ? const Color(0xFF00FF66).withAlpha(110) : Colors.white,
-                            fontSize: _cantNumeros >= 35 ? 16 : 19,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
+                        child: Text(_ocultoChimp && !ok ? '?' : '$v',
+                            style: TextStyle(color: ok ? Colors.white38 : Colors.white, fontSize: 16, fontWeight: FontWeight.w900)),
                       ),
                     );
                   },
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00FF66),
-                          foregroundColor: Colors.black,
-                        ),
-                        icon: const Icon(Icons.play_arrow, size: 18),
-                        label: Text(
-                          'INICIAR ($_cantNumeros NUMS) · ${(_tiempoMs / 1000).toStringAsFixed(1)}s',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
-                        ),
-                        onPressed: () => _prepararTableroSchulte(iniciar: true),
-                      ),
-                    ),
-                    if (_modoSchulte == 'SOLO_MENTAL' && _corriendoReloj) ...[
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFD700),
-                          foregroundColor: Colors.black,
-                        ),
-                        onPressed: () => _celebrarVictoria(
-                          'Recorrido mental de $_cantNumeros numeros en ${(_tiempoMs / 1000).toStringAsFixed(1)} segundos.',
-                        ),
-                        child: const Text('TERMINE MENTAL', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w900)),
-                      ),
-                    ],
-                  ],
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00FF66), foregroundColor: Colors.black),
+                  onPressed: () => _modoSchulte == 'SOLO_MENTAL' && _relojActivo
+                      ? _guardarRecordSupabase('Escaneo mental de $_cantNums numeros completado.')
+                      : _prepararSchulte(iniciar: true),
+                  child: Text(_modoSchulte == 'SOLO_MENTAL' && _relojActivo ? '⏹️ TERMINE RECORRIDO MENTAL' : '▶️ INICIAR PARTIDA ($_cantNums NUMS)',
+                      style: const TextStyle(fontWeight: FontWeight.w900)),
                 ),
               ],
               if (_juegoActivo == 'VEDIC_MATH_IA') ...[
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    {'id': 'BASICO', 't': '🟢 Basico (+ -)'},
+                    {'id': 'MEDIO', 't': '🔵 Medio (×)'},
+                    {'id': 'DIFICIL_VEDICO', 't': '🟠 Dificil Vedico'},
+                    {'id': 'GENIO_ALGEBRA', 't': '👑 Genio Ecuacion x'},
+                  ].map((nv) => ChoiceChip(
+                    label: Text(nv['t']!, style: TextStyle(color: _nivelMat == nv['id'] ? Colors.black : Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    selected: _nivelMat == nv['id'],
+                    selectedColor: const Color(0xFF00F3FF),
+                    onSelected: (_) {
+                      setState(() => _nivelMat = nv['id']!);
+                      _generarPreguntaMatematicas(hablar: true);
+                    },
+                  )).toList(),
+                ),
+                const SizedBox(height: 10),
                 Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F172A),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF00F3FF)),
-                  ),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(color: const Color(0xFF0F172A), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF00F3FF))),
                   child: Column(
                     children: [
-                      Text(
-                        'Aciertos Vedicos: $_aciertosVedicos',
-                        style: const TextStyle(color: Color(0xFFFFD700), fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
+                      Text('🔥 Racha: $_rachaMat  |  ❤️ Vidas: $_vidasMat', style: const TextStyle(color: Color(0xFFFFD700), fontSize: 11.5, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
-                      Text(
-                        '$_numA $_operadorVedico $_numB = ?',
-                        style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w900),
-                      ),
+                      Text(_enunciadoMat, style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900)),
+                      const SizedBox(height: 6),
+                      Text('💡 $_trucoMat', textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF00FF66), fontSize: 11)),
                       const SizedBox(height: 12),
                       Wrap(
                         spacing: 10,
                         runSpacing: 10,
-                        children: _opcionesVedicas.map((op) {
-                          final int v = (op as num).toInt();
+                        children: _opcionesMat.map((op) {
+                          final int val = (op as num).toInt();
                           return SizedBox(
                             width: 130,
                             child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1E293B),
-                                foregroundColor: const Color(0xFF00FF66),
-                                side: const BorderSide(color: Color(0xFF00F3FF)),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                              ),
-                              onPressed: () => _responderVedico(v),
-                              child: Text('$v', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E293B), foregroundColor: const Color(0xFF00FF66)),
+                              onPressed: () => _responderMatematicas(val),
+                              child: Text('$val', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
                             ),
                           );
                         }).toList(),
                       ),
-                      const SizedBox(height: 10),
                       TextButton.icon(
-                        onPressed: () => _avatarHablar('Cuanto es $_numA multiplicado por $_numB'),
-                        icon: const Icon(Icons.record_voice_over, color: Color(0xFF00FF66), size: 18),
-                        label: const Text(
-                          'ESCUCHAR PREGUNTA CON VOZ DEL AVATAR',
-                          style: TextStyle(color: Color(0xFF00FF66), fontSize: 10.5, fontWeight: FontWeight.w900),
-                        ),
+                        onPressed: () => _hablar('Cuanto es $_enunciadoMat. $_trucoMat'),
+                        icon: const Icon(Icons.volume_up, color: Color(0xFFFFD700)),
+                        label: const Text('ESCUCHAR OPERACION Y TRUCO CON VOZ', style: TextStyle(color: Color(0xFFFFD700), fontSize: 10.5, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
+                ),
+              ],
+              if (_juegoActivo == 'GRID_DIGIT_MEM') ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [3, 4, 5].map((t) => ChoiceChip(
+                    label: Text('Matriz ${t}x$t', style: TextStyle(color: _tamMatriz == t ? Colors.black : Colors.white, fontWeight: FontWeight.bold)),
+                    selected: _tamMatriz == t,
+                    selectedColor: const Color(0xFFFFD700),
+                    onSelected: (_) {
+                      setState(() => _tamMatriz = t);
+                      _generarPatronMatriz();
+                    },
+                  )).toList(),
+                ),
+                const SizedBox(height: 8),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: _tamMatriz, crossAxisSpacing: 6, mainAxisSpacing: 6, childAspectRatio: 1.3),
+                  itemCount: _tamMatriz * _tamMatriz,
+                  itemBuilder: (ctx, idx) {
+                    final bool iluminada = (_mostrandoPatron && _patronObjetivo.contains(idx)) || (!_mostrandoPatron && _patronUsuario.contains(idx));
+                    return InkWell(
+                      onTap: () => _tocarCeldaMatriz(idx),
+                      child: Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: iluminada ? const Color(0xFF00FF66) : const Color(0xFF1E293B),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFFFD700)),
+                        ),
+                        child: Text(iluminada ? '⚡' : '${idx + 1}', style: TextStyle(color: iluminada ? Colors.black : Colors.white70, fontWeight: FontWeight.bold)),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700), foregroundColor: Colors.black),
+                  onPressed: _generarPatronMatriz,
+                  child: const Text('🔄 VER NUEVO PATRON DE MEMORIA', style: TextStyle(fontWeight: FontWeight.w900)),
                 ),
               ],
               if (_juegoActivo == 'ALPHA_RAIN_2D') ...[
                 Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F172A),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFF00FC)),
-                  ),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: const Color(0xFF0F172A), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFFF00FC))),
                   child: Column(
                     children: [
-                      Text(
-                        '🎯 ATRAPA CAPSULA OBJETIVO: $_objetivoRain  |  🔥 Combo: x$_comboRain',
-                        style: const TextStyle(color: Color(0xFFFFD700), fontSize: 13, fontWeight: FontWeight.w900),
-                      ),
-                      const SizedBox(height: 12),
+                      Text('🎯 ATRAPA: $_objRain  |  🔥 Combo: x$_comboRain', style: const TextStyle(color: Color(0xFFFFD700), fontSize: 12.5, fontWeight: FontWeight.w900)),
+                      const SizedBox(height: 10),
                       Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        alignment: WrapAlignment.center,
-                        children: _burbujasRain.map((b) {
-                          final String cod = b.toString();
-                          return InkWell(
-                            onTap: () => _tocarBurbujaRain(cod),
-                            child: Container(
-                              width: 74,
-                              height: 54,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF1E1B4B),
-                                borderRadius: BorderRadius.circular(25),
-                                border: Border.all(color: const Color(0xFF00F3FF), width: 1.5),
-                              ),
-                              child: Text(
-                                cod,
-                                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _itemsRain.map((it) => ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E1B4B), foregroundColor: Colors.white),
+                          onPressed: () {
+                            if (it == _objRain) {
+                              final List copia = List.from(_itemsRain)..shuffle(_rng);
+                              setState(() {
+                                _comboRain++;
+                                _puntosTotales += 50;
+                                _itemsRain = copia;
+                                _objRain = copia.first.toString();
+                              });
+                              if (_comboRain % 4 == 0) _guardarRecordSupabase('Combo clasificador por $_comboRain.');
+                            } else {
+                              setState(() => _comboRain = 0);
+                              _hablar('Busca $_objRain');
+                            }
+                          },
+                          child: Text(it.toString(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        )).toList(),
                       ),
                     ],
                   ),
                 ),
               ],
-              if (_juegoActivo == 'DIGIT_SPAN_MEM') ...[
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F172A),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFFD700)),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        'NIVEL ACTUAL: $_nivelSpan DIGITOS EN MEMORIA DE TRABAJO',
-                        style: const TextStyle(color: Color(0xFFFFD700), fontSize: 11.5, fontWeight: FontWeight.w900),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFF00FF66)),
-                        ),
-                        child: Text(
-                          _mostrandoSecuencia ? _secuenciaDigitSpan : '• ' * _nivelSpan,
-                          style: const TextStyle(
-                            color: Color(0xFF00FF66),
-                            fontSize: 26,
-                            letterSpacing: 4,
-                            fontWeight: FontWeight.w900,
+              if (_juegoActivo == 'GARDNER_8_VOZ') ...[
+                Builder(builder: (ctx) {
+                  final Map reto = Map.from(_retosGardner[_idxRetoGardner % _retosGardner.length] as Map);
+                  final List ops = reto['ops'] as List;
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: const Color(0xFF0F172A), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF00FF66))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(reto['intel'].toString(), style: const TextStyle(color: Color(0xFFFFD700), fontSize: 12, fontWeight: FontWeight.w900)),
+                        const SizedBox(height: 6),
+                        Text(reto['preg'].toString(), style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 10),
+                        ...List.generate(ops.length, (i) => Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E293B), foregroundColor: Colors.white),
+                            onPressed: () {
+                              if (i == reto['ok']) {
+                                setState(() {
+                                  _puntosTotales += 100;
+                                  _idxRetoGardner++;
+                                });
+                                _guardarRecordSupabase('Reto de las 8 inteligencias superado.');
+                              } else {
+                                _hablar('Intenta con otra respuesta.');
+                              }
+                            },
+                            child: Text(ops[i].toString(), style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: _ctrlRespuestaSpan,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white, fontSize: 18, letterSpacing: 3),
-                        decoration: InputDecoration(
-                          hintText: 'Escribe la secuencia de $_nivelSpan digitos...',
-                          hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
-                          filled: true,
-                          fillColor: Colors.black,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _generarSecuenciaDigitSpan,
-                              child: const Text('NUEVA SECUENCIA', style: TextStyle(color: Color(0xFF00F3FF))),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF00FF66),
-                                foregroundColor: Colors.black,
-                              ),
-                              onPressed: _verificarDigitSpan,
-                              child: const Text('VERIFICAR MEMORIA', style: TextStyle(fontWeight: FontWeight.w900)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                        )),
+                      ],
+                    ),
+                  );
+                }),
               ],
             ],
           ),
-          ConfettiWidget(
-            confettiController: _confettiCtrl,
-            blastDirectionality: BlastDirectionality.explosive,
-            shouldLoop: false,
-            colors: const [
-              Color(0xFF00FF66),
-              Color(0xFF00F3FF),
-              Color(0xFFFF00FC),
-              Color(0xFFFFD700),
-            ],
-          ),
+          ConfettiWidget(confettiController: _confettiCtrl, blastDirectionality: BlastDirectionality.explosive, shouldLoop: false),
         ],
       ),
     );
   }
 
-  Widget _chipMotorJuego(String id, String label, Color col) {
+  Widget _chipJuego(String id, String lbl, Color col) {
     final bool sel = _juegoActivo == id;
     return Padding(
       padding: const EdgeInsets.only(right: 6),
       child: ChoiceChip(
-        label: Text(
-          label,
-          style: TextStyle(
-            color: sel ? Colors.black : Colors.white,
-            fontSize: 10.5,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+        label: Text(lbl, style: TextStyle(color: sel ? Colors.black : Colors.white, fontSize: 10.5, fontWeight: FontWeight.w900)),
         selected: sel,
         selectedColor: col,
         backgroundColor: const Color(0xFF142033),
         onSelected: (_) {
           HapticFeedback.selectionClick();
           setState(() => _juegoActivo = id);
-          if (id == 'DIGIT_SPAN_MEM') {
-            _generarSecuenciaDigitSpan();
-          }
+          _hablar('Juego activado: $lbl');
         },
-      ),
-    );
-  }
-
-  Widget _btnModoCorto(String idModo, String label, Color col) {
-    final bool sel = _modoSchulte == idModo;
-    return Expanded(
-      child: InkWell(
-        onTap: () {
-          setState(() => _modoSchulte = idModo);
-          _prepararTableroSchulte(iniciar: false);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: sel ? col : const Color(0xFF142033),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: col),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: sel ? Colors.black : Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
       ),
     );
   }
